@@ -19,7 +19,7 @@ export const DEFAULT_PROJECT_PATHS_FILE = 'data/project-paths.json';
  * 8601 `VARCHAR` `SessionRowSchema` already defines, not as a DuckDB
  * `TIMESTAMP`, so no conversion is needed when the row is read back.
  */
-const CREATE_TABLE_SQL = `
+export const CREATE_TABLE_SQL = `
 CREATE TABLE IF NOT EXISTS sessions (
   session_id VARCHAR PRIMARY KEY,
   agent VARCHAR,

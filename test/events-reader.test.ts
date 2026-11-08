@@ -1,4 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { writeFileSync } from 'node:fs';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
 import { classifyLine, UNKNOWN_AGENT_KEY } from '../src/events/line.js';
 import { countEventLines, readEventsFile } from '../src/events/read.js';
 
@@ -415,5 +419,53 @@ describe('countEventLines', () => {
 
   it('returns 0 for a missing file', async () => {
     expect(await countEventLines(MISSING_PATH)).toBe(0);
+  });
+});
+
+describe('readEventsFile and countEventLines, with a startByte offset', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    while (tempDirs.length > 0) {
+      const dir = tempDirs.pop();
+      if (dir !== undefined) {
+        await rm(dir, { recursive: true, force: true });
+      }
+    }
+  });
+
+  async function writeTwoLineFixture(): Promise<{ path: string; startByte: number }> {
+    const dir = await mkdtemp(join(tmpdir(), 'agent-telemetry-reader-startbyte-'));
+    tempDirs.push(dir);
+    const path = join(dir, 'startbyte.jsonl');
+
+    const firstLine =
+      '{"kind":"prompt","agent":"claude-code","session_id":"session-first","project":"proj-x","prompt_length":1}\n';
+    const secondLine =
+      '{"kind":"prompt","agent":"claude-code","session_id":"session-second","project":"proj-x","prompt_length":2}\n';
+
+    writeFileSync(path, firstLine + secondLine);
+
+    return { path, startByte: Buffer.byteLength(firstLine, 'utf8') };
+  }
+
+  it('readEventsFile reads only the second line Event when given the first line byte length as startByte', async () => {
+    const { path, startByte } = await writeTwoLineFixture();
+
+    const result = await readEventsFile(path, { startByte });
+
+    expect(result.events).toHaveLength(1);
+    const [event] = result.events;
+    if (event === undefined) {
+      throw new Error('expected one Event');
+    }
+    expect(event.session_id).toBe('session-second');
+    expect(result.lines).toBe(1);
+  });
+
+  it('countEventLines counts only the second line when given the first line byte length as startByte', async () => {
+    const { path, startByte } = await writeTwoLineFixture();
+
+    expect(await countEventLines(path, { startByte })).toBe(1);
   });
 });

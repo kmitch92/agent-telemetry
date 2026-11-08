@@ -13,6 +13,12 @@ import type { EventRecord } from './line.js';
 /** Relative path, never an absolute home-directory path. */
 export const DEFAULT_EVENTS_PATH = 'data/events.jsonl';
 
+/** Options shared by `readEventsFile` and `countEventLines`. */
+export interface ReadWindowOptions {
+  /** Byte offset to start the read at. Defaults to 0, the whole file. */
+  startByte?: number;
+}
+
 /** The folded outcome of reading one Events file. */
 export interface ReadResult {
   events: Event[];
@@ -39,9 +45,17 @@ function isMissingFileError(error: unknown): boolean {
  * Streams every line of `path` to `onLine`, line by line, so a rotated
  * multi-megabyte Events file never loads whole into memory.
  */
-function streamLines(path: string, onLine: (line: string) => void): Promise<void> {
+function streamLines(
+  path: string,
+  onLine: (line: string) => void,
+  startByte: number = 0,
+): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    const stream = createReadStream(path, { encoding: 'utf8' });
+    // `start` is only valid while the file keeps growing: a caller that
+    // sees the file shrink below its recorded offset must fall back to 0,
+    // since a smaller file reused at the same `startByte` would skip lines
+    // or read past the end instead of reading the lines actually there.
+    const stream = createReadStream(path, { encoding: 'utf8', start: startByte });
     const lineReader = createInterface({ input: stream, crlfDelay: Infinity });
 
     lineReader.on('error', (error: Error) => {
@@ -63,7 +77,10 @@ function streamLines(path: string, onLine: (line: string) => void): Promise<void
  * result, rather than rejecting, when the file does not exist yet, because
  * the Runner polls before the Collector has written anything.
  */
-export async function readEventsFile(path: string = DEFAULT_EVENTS_PATH): Promise<ReadResult> {
+export async function readEventsFile(
+  path: string = DEFAULT_EVENTS_PATH,
+  options?: ReadWindowOptions,
+): Promise<ReadResult> {
   const result: ReadResult = {
     events: [],
     records: [],
@@ -73,25 +90,29 @@ export async function readEventsFile(path: string = DEFAULT_EVENTS_PATH): Promis
   };
 
   try {
-    await streamLines(path, (line) => {
-      if (line.trim() === '') {
-        return;
-      }
-
-      result.lines += 1;
-
-      for (const outcome of classifyLine(line)) {
-        if (outcome.outcome === 'event') {
-          result.events.push(outcome.record.event);
-          result.records.push(outcome.record);
-        } else if (outcome.outcome === 'unknown_kind') {
-          result.unknownKindsByAgent[outcome.agent] =
-            (result.unknownKindsByAgent[outcome.agent] ?? 0) + 1;
-        } else {
-          result.malformed += 1;
+    await streamLines(
+      path,
+      (line) => {
+        if (line.trim() === '') {
+          return;
         }
-      }
-    });
+
+        result.lines += 1;
+
+        for (const outcome of classifyLine(line)) {
+          if (outcome.outcome === 'event') {
+            result.events.push(outcome.record.event);
+            result.records.push(outcome.record);
+          } else if (outcome.outcome === 'unknown_kind') {
+            result.unknownKindsByAgent[outcome.agent] =
+              (result.unknownKindsByAgent[outcome.agent] ?? 0) + 1;
+          } else {
+            result.malformed += 1;
+          }
+        }
+      },
+      options?.startByte,
+    );
   } catch (error) {
     if (isMissingFileError(error)) {
       return result;
@@ -106,15 +127,22 @@ export async function readEventsFile(path: string = DEFAULT_EVENTS_PATH): Promis
  * Counts the non-empty lines of an Events file without parsing them, so the
  * Runner can poll for growth cheaply. Returns 0 for a missing file.
  */
-export async function countEventLines(path: string = DEFAULT_EVENTS_PATH): Promise<number> {
+export async function countEventLines(
+  path: string = DEFAULT_EVENTS_PATH,
+  options?: ReadWindowOptions,
+): Promise<number> {
   let count = 0;
 
   try {
-    await streamLines(path, (line) => {
-      if (line.trim() !== '') {
-        count += 1;
-      }
-    });
+    await streamLines(
+      path,
+      (line) => {
+        if (line.trim() !== '') {
+          count += 1;
+        }
+      },
+      options?.startByte,
+    );
   } catch (error) {
     if (isMissingFileError(error)) {
       return 0;

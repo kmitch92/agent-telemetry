@@ -255,6 +255,7 @@ describe('foldRunAggregate', () => {
       cache_read_tokens: 0,
       cache_hits: 0,
       expected_tools_hit: false,
+      cost_usd: null,
     });
   });
 
@@ -268,6 +269,8 @@ describe('foldRunAggregate', () => {
       cache_read_tokens: 10,
       cache_hits: 1,
       expected_tools_hit: true,
+      // cost_usd: 0.25 from the first model_call; the second carries none
+      cost_usd: 0.25,
     });
   });
 
@@ -352,6 +355,57 @@ describe('foldRunAggregate', () => {
     ];
 
     expect(foldRunAggregate(cacheEvents, { runId: 'run-5', expectedTools: [] }).cache_hits).toBe(0);
+  });
+
+  it('sums cost_usd across the model_call Events of the Run', () => {
+    const costEvents: Event[] = [
+      {
+        kind: 'model_call',
+        agent: 'claude-code',
+        session_id: 'session-cost',
+        project: 'proj-x',
+        run_id: 'run-cost-1',
+        model: 'claude-opus-5',
+        input_tokens: 1,
+        output_tokens: 1,
+        cost_usd: 0.3,
+      },
+      {
+        kind: 'model_call',
+        agent: 'claude-code',
+        session_id: 'session-cost',
+        project: 'proj-x',
+        run_id: 'run-cost-1',
+        model: 'claude-opus-5',
+        input_tokens: 1,
+        output_tokens: 1,
+        cost_usd: 0.2,
+      },
+    ];
+
+    // cost_usd: 0.3 + 0.2 = 0.5
+    expect(foldRunAggregate(costEvents, { runId: 'run-cost-1', expectedTools: [] }).cost_usd).toBe(
+      0.5,
+    );
+  });
+
+  it('gives cost_usd null when no model_call Event of the Run carries cost_usd', () => {
+    const noCostEvents: Event[] = [
+      {
+        kind: 'model_call',
+        agent: 'claude-code',
+        session_id: 'session-nocost',
+        project: 'proj-x',
+        run_id: 'run-nocost-1',
+        model: 'claude-opus-5',
+        input_tokens: 1,
+        output_tokens: 1,
+      },
+    ];
+
+    expect(
+      foldRunAggregate(noCostEvents, { runId: 'run-nocost-1', expectedTools: [] }).cost_usd,
+    ).toBeNull();
   });
 
   it('is pure: two calls on a frozen input give equal but distinct results, and leave the input unchanged', () => {

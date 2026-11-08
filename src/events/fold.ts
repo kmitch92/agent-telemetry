@@ -145,6 +145,7 @@ export interface RunAggregate {
   cache_read_tokens: number;
   cache_hits: number;
   expected_tools_hit: boolean;
+  cost_usd: number | null;
 }
 
 /**
@@ -163,7 +164,8 @@ export function filterByRunId(events: readonly Event[], runId: string): Event[] 
  * `expected_tools_hit` looks only at the first `tool_call`, in input
  * order. A Run's own `run_end` Event reports the Runner's aggregate, not a
  * fresh `model_call`, so it is excluded from the token sums for the same
- * reason `foldSessionTotals` excludes it.
+ * reason `foldSessionTotals` excludes it. `cost_usd` stays `null` when no
+ * filtered `model_call` Event carried a `cost_usd`.
  */
 export function foldRunAggregate(
   events: readonly Event[],
@@ -179,6 +181,7 @@ export function foldRunAggregate(
   let cacheReadTokens = 0;
   let cacheHits = 0;
   let firstTool: string | null = null;
+  let costUsd: number | null = null;
 
   for (const event of filtered) {
     switch (event.kind) {
@@ -187,6 +190,9 @@ export function foldRunAggregate(
         inputTokens += event.input_tokens ?? 0;
         outputTokens += event.output_tokens ?? 0;
         cacheReadTokens += event.cache_read_tokens ?? 0;
+        if (event.cost_usd !== undefined) {
+          costUsd = (costUsd ?? 0) + event.cost_usd;
+        }
         break;
       case 'tool_call':
         toolCalls += 1;
@@ -219,5 +225,6 @@ export function foldRunAggregate(
     cache_read_tokens: cacheReadTokens,
     cache_hits: cacheHits,
     expected_tools_hit: expectedToolsHit,
+    cost_usd: costUsd,
   };
 }
