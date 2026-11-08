@@ -212,3 +212,7 @@ so no event name or attribute key is verified for either Agent.
   `mcp_server.raw_bytes` as zero, leaving that total zero and the
   ratio undefined. The panel stays, since both byte totals are real measured
   values; only the ratio awaits a Run with a routed call.
+
+## Licence
+
+This project is under the MIT License. See the `LICENSE` file for the full text.
