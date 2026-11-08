@@ -179,7 +179,9 @@ export function redactLine(
  * Walks `value` with the same name-context rules `redactJson` uses,
  * including the transparent-name set, and collects every string at least
  * `minLength` long, paired with the name context in force for it. A
- * numeric-wrapper string is collected too, under its wrapper's own name.
+ * numeric-wrapper string is NOT collected, because `redactJson` keeps it,
+ * and the two walks must agree so a caller can pair a sample with the
+ * policy that will actually apply to it.
  */
 export function collectNamedStrings(
   value: unknown,
@@ -211,6 +213,9 @@ function collectStrings(
     }
 
     for (const key of Object.keys(value)) {
+      if (NUMERIC_WRAPPER_NAMES.has(key)) {
+        continue;
+      }
       const childName = TRANSPARENT_NAMES.has(key) ? name : key;
       collectStrings(value[key], childName, minLength, results);
     }

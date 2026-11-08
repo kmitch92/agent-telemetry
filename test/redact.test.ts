@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { policyFor, redactJson, redactLine } from '../src/redact.js';
+import {
+  KEEP_NAMES,
+  collectNamedStrings,
+  policyFor,
+  redactJson,
+  redactLine,
+} from '../src/redact.js';
 import type { RedactOptions } from '../src/redact.js';
 
 /**
@@ -224,6 +230,67 @@ describe('redactJson over a Claude Code transcript record', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.reason.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('collectNamedStrings agrees with redactJson', () => {
+  it('does not report a numeric wrapper string that redactJson keeps', () => {
+    expect(KEEP_NAMES.has('cache_read_tokens')).toBe(false);
+
+    const attribute = {
+      key: 'cache_read_tokens',
+      value: { intValue: '12345678' },
+    };
+
+    const output = JSON.stringify(redactJson(attribute, options));
+    expect(output).toContain('"intValue":"12345678"');
+
+    const collected = collectNamedStrings(attribute, 8);
+    expect(collected.some((sample) => sample.value === '12345678')).toBe(false);
+  });
+
+  it('reports a doubleValue and a boolValue string no differently', () => {
+    const attributes = [
+      { key: 'cost_usd', value: { doubleValue: '0.00123456' } },
+      { key: 'is_cached', value: { boolValue: 'truthy-string-value' } },
+    ];
+
+    const output = JSON.stringify(redactJson(attributes, options));
+    expect(output).toContain('"doubleValue":"0.00123456"');
+    expect(output).toContain('"boolValue":"truthy-string-value"');
+
+    const collected = collectNamedStrings(attributes, 8);
+    expect(collected.some((sample) => sample.value === '0.00123456')).toBe(false);
+    expect(collected.some((sample) => sample.value === 'truthy-string-value')).toBe(false);
+  });
+
+  it('still reports a real text string under its attribute key', () => {
+    const PATH_VALUE = '/home/kiel/some-long-path';
+    const attribute = { key: 'file_path', value: { stringValue: PATH_VALUE } };
+
+    const collected = collectNamedStrings(attribute, 8);
+
+    expect(collected.length).toBe(1);
+    expect(collected[0]?.name).toBe('file_path');
+    expect(collected[0]?.value).toBe(PATH_VALUE);
+  });
+
+  it('every collected string whose policy is not keep is absent after redaction', () => {
+    const MARKER = 'text-attribute-marker-value';
+    const envelope = {
+      attributes: [
+        { key: 'tool_input', value: { stringValue: MARKER } },
+        { key: 'event.name', value: { stringValue: 'claude_code.user_prompt' } },
+        { key: 'cache_read_tokens', value: { intValue: '87654321' } },
+      ],
+      timeUnixNano: '1794103594282000000',
+    };
+
+    const output = JSON.stringify(redactJson(envelope, options));
+    for (const sample of collectNamedStrings(envelope, 8)) {
+      if (policyFor(sample.name) === 'keep') continue;
+      expect(output).not.toContain(sample.value);
     }
   });
 });
