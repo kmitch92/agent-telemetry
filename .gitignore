@@ -1,0 +1,28 @@
+node_modules/
+coverage/
+data/
+runs/
+results.duckdb
+*.duckdb
+*.duckdb.wal
+.env
+.env.*
+!.env.example
+dist/
+*.tsbuildinfo
+.DS_Store
+*.log
+.planbot/logs/
+.planbot/planbot.pid
+.planbot/plans/
+.planbot/sessions/
+.planbot/state.json
+
+# local captures, never commit
+captures/
+*.capture.jsonl
+events.jsonl
+*.events.jsonl
+transcripts/
+# transcript fixtures are regenerated with `pnpm harvest`, not committed
+!test/fixtures/events/
