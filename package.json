@@ -17,7 +17,7 @@
     "harvest": "tsx scripts/harvest-transcripts.ts",
     "bench": "echo \"not implemented\" && exit 1",
     "report": "echo \"not implemented\" && exit 1",
-    "sessions": "echo \"not implemented\" && exit 1",
+    "sessions": "tsx src/sessions/cli.ts",
     "mcp:conform": "echo \"not implemented\" && exit 1",
     "dashboards:build": "echo \"not implemented\" && exit 1",
     "typecheck": "tsc --noEmit",
@@ -27,7 +27,8 @@
     "prepare": "simple-git-hooks"
   },
   "dependencies": {
-    "zod": "4.6.7"
+    "zod": "4.6.7",
+    "@duckdb/node-api": "2.0.0-r.1"
   },
   "devDependencies": {
     "typescript": "6.0.3",
