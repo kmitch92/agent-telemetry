@@ -697,14 +697,13 @@ describe('no string from a real Transcript survives redaction', () => {
       return cachedFixtureData;
     }
 
-    const FIXTURES_DIR = 'test/fixtures/transcripts/claude-code';
-    const fixtureNames = readdirSync(FIXTURES_DIR).filter((name) => name.endsWith('.jsonl'));
+    const fixtureNames = listJsonlFixtureNames(TRANSCRIPT_FIXTURES_DIR);
     const nonKeepFixtureValues = new Set<string>();
     const fixtureKeys = new Set<string>();
     const keptValues: string[] = [];
 
     for (const name of fixtureNames) {
-      const text = readFileSync(join(FIXTURES_DIR, name), 'utf8');
+      const text = readFileSync(join(TRANSCRIPT_FIXTURES_DIR, name), 'utf8');
       const lines = text.split('\n').filter((line) => line.length > 0);
       for (const line of lines) {
         const parsed: unknown = JSON.parse(line);
