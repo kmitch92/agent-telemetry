@@ -121,12 +121,13 @@ tickets:
       - "`pnpm lint` exits 0"
       - "`grep -E '[\\^~]' package.json` returns no dependency line"
       - "`pnpm verify` runs all three gates and exits 0 on the empty project"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: schema
     title: Common event schema in Zod
     priority: 95
-    dependencies: [scaffold]
+    dependencies: [ scaffold ]
     description: |
       Write the single source of truth for every shape the system exchanges.
       Read "Normaliser and common schema", "Session identity" and
@@ -157,16 +158,18 @@ tickets:
       value is rejected by the union, and a test asserting the optional
       resource attributes are genuinely optional.
     acceptanceCriteria:
-      - "`pnpm vitest run test/schema.test.ts` passes with at least 20 assertions"
+      - "`pnpm vitest run test/schema.test.ts` passes with at least 20
+        assertions"
       - "`pnpm typecheck` exits 0"
       - "`grep -rn ': any' src/schema` returns nothing"
       - "Every exported type in src/schema is produced by z.infer"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: otlp-sender
     title: Fire-and-forget OTLP log sender
     priority: 90
-    dependencies: [schema]
+    dependencies: [ schema ]
     description: |
       Write the one module every component uses to emit an Event. Read the
       "MCP server event contract" transport rules in ./SPEC.md first, because
@@ -200,15 +203,18 @@ tickets:
       and the first-failure-then-silence behaviour.
     acceptanceCriteria:
       - "`pnpm vitest run test/otlp.test.ts` passes"
-      - "A test proves the sender does not throw when nothing listens on the endpoint"
-      - "A test proves zero network calls when OTEL_EXPORTER_OTLP_ENDPOINT is unset"
+      - "A test proves the sender does not throw when nothing listens on the
+        endpoint"
+      - "A test proves zero network calls when OTEL_EXPORTER_OTLP_ENDPOINT is
+        unset"
       - "`pnpm verify` exits 0"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: events-reader
     title: events.jsonl reader and pure folds
     priority: 85
-    dependencies: [schema]
+    dependencies: [ schema ]
     description: |
       Write the reader every downstream consumer uses, and the pure folds that
       turn Events into summaries. Read "Normaliser and common schema" and
@@ -236,14 +242,16 @@ tickets:
     acceptanceCriteria:
       - "`pnpm vitest run test/events-reader.test.ts test/fold.test.ts` passes"
       - "A malformed line is counted and skipped without throwing"
-      - "`grep -rnE \"(readFile|writeFile|fetch|spawn)\" src/events/fold.ts` returns nothing"
+      - "`grep -rnE \"(readFile|writeFile|fetch|spawn)\" src/events/fold.ts`
+        returns nothing"
       - "`pnpm verify` exits 0"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: stack
     title: Compose stack with four services
     priority: 80
-    dependencies: [scaffold]
+    dependencies: [ scaffold ]
     description: |
       Bring up the Collector, Loki, Prometheus and Grafana from files in this
       repo, with nothing created by hand in any user interface. Read the
@@ -286,16 +294,21 @@ tickets:
       become underscores and the dashboards must use the real names.
     acceptanceCriteria:
       - "`pnpm compose:up` returns only when all four services report healthy"
-      - "`curl -s localhost:3000/api/health` returns a 200 with no authentication"
-      - "`curl -s localhost:3100/ready` and `curl -s localhost:9090/-/ready` both report ready"
-      - "`grep -cE ':(latest|[0-9]+)$' compose/docker-compose.yml` shows every image tag pinned and none is `latest`"
-      - "The real Loki label names are recorded in a comment in compose/loki/config.yaml"
+      - "`curl -s localhost:3000/api/health` returns a 200 with no
+        authentication"
+      - "`curl -s localhost:3100/ready` and `curl -s localhost:9090/-/ready`
+        both report ready"
+      - "`grep -cE ':(latest|[0-9]+)$' compose/docker-compose.yml` shows every
+        image tag pinned and none is `latest`"
+      - "The real Loki label names are recorded in a comment in
+        compose/loki/config.yaml"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: record-live
     title: Redactor and live Claude Code recording
     priority: 75
-    dependencies: [stack, otlp-sender, events-reader]
+    dependencies: [ stack, otlp-sender, events-reader ]
     description: |
       COSTS MONEY: this ticket starts one real Claude Code session with a
       single trivial prompt. That is its entire purpose. Do not run more than
@@ -335,17 +348,22 @@ tickets:
       Add `record` and `harvest` as real package scripts, with harvest still
       a stub.
     acceptanceCriteria:
-      - "test/fixtures/events/claude-code/01.jsonl exists and every line parses as JSON"
-      - "`pnpm vitest run test/redact.test.ts` passes and proves no source string survives redaction"
-      - "docs/agent-events.md names the exact attribute carrying the Claude Code session identifier, quoted from the recording"
-      - "docs/agent-events.md states plainly whether OTEL_RESOURCE_ATTRIBUTES was honoured"
+      - "test/fixtures/events/claude-code/01.jsonl exists and every line parses
+        as JSON"
+      - "`pnpm vitest run test/redact.test.ts` passes and proves no source
+        string survives redaction"
+      - "docs/agent-events.md names the exact attribute carrying the Claude Code
+        session identifier, quoted from the recording"
+      - "docs/agent-events.md states plainly whether OTEL_RESOURCE_ATTRIBUTES
+        was honoured"
       - "No unredacted capture exists anywhere in the working tree"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: normaliser
     title: Collector transform for Claude Code and Runner events
     priority: 70
-    dependencies: [record-live]
+    dependencies: [ record-live ]
     description: |
       Make one dashboard query serve every Agent. Read "Normaliser and common
       schema" in ./SPEC.md, then read docs/agent-events.md, which holds the
@@ -378,16 +396,19 @@ tickets:
 
       Update docs/agent-events.md with the verified mapping table.
     acceptanceCriteria:
-      - "`pnpm compose:up && pnpm vitest run test/normaliser.integration.test.ts` passes"
+      - "`pnpm compose:up && pnpm vitest run
+        test/normaliser.integration.test.ts` passes"
       - "The unknown kind count for claude-code is exactly 0"
       - "Every line of the Collector output parses against the Event union"
-      - "`grep -rn 'claude' src/ --include=*.ts | grep -i 'event.name'` returns nothing, proving no Agent event name leaked out of the collector config"
+      - "`grep -rn 'claude' src/ --include=*.ts | grep -i 'event.name'` returns
+        nothing, proving no Agent event name leaked out of the collector config"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: harvest
     title: Harvest and redact transcript fixtures
     priority: 65
-    dependencies: [record-live]
+    dependencies: [ record-live ]
     description: |
       Build the offline test bed. 484 Claude Code transcript files exist
       across 7 project directories under ~/.claude/projects. Read "Replayer
@@ -409,16 +430,19 @@ tickets:
 
       Make `harvest` a real package script.
     acceptanceCriteria:
-      - "`pnpm harvest` writes exactly 20 files under test/fixtures/transcripts/claude-code/"
+      - "`pnpm harvest` writes exactly 20 files under
+        test/fixtures/transcripts/claude-code/"
       - "`pnpm vitest run test/redact.test.ts` passes against the new fixtures"
-      - "`git status` shows no modification or deletion anywhere under the home directory"
+      - "`git status` shows no modification or deletion anywhere under the home
+        directory"
       - "No absolute home-directory path appears in any committed fixture"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: transcript-parser
     title: Claude Code transcript parser
     priority: 60
-    dependencies: [harvest]
+    dependencies: [ harvest ]
     description: |
       Turn a transcript into Events so every dashboard can be verified without
       starting an Agent. Read "Replayer and test beds" in ./SPEC.md first.
@@ -453,12 +477,13 @@ tickets:
       - "All 20 fixtures parse with no exception"
       - "Every produced Event validates against the Event union"
       - "Coverage of src/replayer/parsers meets the SPEC.md threshold"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: replayer
     title: Replay command-line interface
     priority: 55
-    dependencies: [transcript-parser, normaliser]
+    dependencies: [ transcript-parser, normaliser ]
     description: |
       Make the whole pipeline verifiable with no Agent running. Read "Replayer
       and test beds" in ./SPEC.md first.
@@ -478,16 +503,20 @@ tickets:
       Mark every synthetic run_id with a recognisable prefix so a synthetic
       Run is never mistaken for a real one in the Results table.
     acceptanceCriteria:
-      - "`pnpm replay --fixtures` reports a sent count equal to the received count"
+      - "`pnpm replay --fixtures` reports a sent count equal to the received
+        count"
       - "`pnpm replay --events` reports a sent count equal to the received count"
-      - "`pnpm replay --dry-run --fixtures` sends nothing, proven by data/events.jsonl being unchanged"
-      - "data/events.jsonl contains Events for more than one distinct session_id after a fixtures replay"
+      - "`pnpm replay --dry-run --fixtures` sends nothing, proven by
+        data/events.jsonl being unchanged"
+      - "data/events.jsonl contains Events for more than one distinct session_id
+        after a fixtures replay"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: session-index
     title: Session index and the sessions command
     priority: 50
-    dependencies: [replayer]
+    dependencies: [ replayer ]
     description: |
       Deliver the feature that distinguishes one Session from another. Read
       "Session identity" in ./SPEC.md first and implement every rule there.
@@ -518,16 +547,20 @@ tickets:
       the row as a label and is null for an ad hoc Session.
     acceptanceCriteria:
       - "`pnpm vitest run test/session-index.test.ts` passes"
-      - "A test proves two concurrent Sessions in the same project stay separate rows"
+      - "A test proves two concurrent Sessions in the same project stay separate
+        rows"
       - "A test proves the upsert is idempotent across two runs"
-      - "`pnpm replay --fixtures && pnpm sessions` prints at least 20 distinct Sessions"
-      - "`pnpm sessions --json` output validates against the Session summary schema"
+      - "`pnpm replay --fixtures && pnpm sessions` prints at least 20 distinct
+        Sessions"
+      - "`pnpm sessions --json` output validates against the Session summary
+        schema"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: dashboard-sessions
     title: Dashboard generator and the Sessions dashboard
     priority: 45
-    dependencies: [session-index]
+    dependencies: [ session-index ]
     description: |
       Dashboards are code. Read "Dashboards" in ./SPEC.md first, and use the
       real Loki label names recorded in compose/loki/config.yaml, not the
@@ -551,18 +584,21 @@ tickets:
       and add a line to a Known gaps list you create in README.md. Never feed
       a panel fabricated data.
     acceptanceCriteria:
-      - "`pnpm dashboards:build` writes compose/grafana/dashboards/sessions.json and the file is committed"
+      - "`pnpm dashboards:build` writes compose/grafana/dashboards/sessions.json
+        and the file is committed"
       - "Grafana opens with the Sessions dashboard as home and no login"
-      - "Every panel on the Sessions dashboard returns data after `pnpm replay --fixtures`"
+      - "Every panel on the Sessions dashboard returns data after `pnpm replay
+        --fixtures`"
       - "Every panel has a non-empty description"
       - "Any deleted panel is listed under Known gaps in README.md"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: dashboard-tools
     title: Tool Calls dashboard
     priority: 40
     planMode: false
-    dependencies: [dashboard-sessions]
+    dependencies: [ dashboard-sessions ]
     description: |
       Add the second dashboard using the generator built in the previous
       ticket. Read the Tool calls row of the dashboard table in ./SPEC.md and
@@ -572,16 +608,18 @@ tickets:
       compose/grafana/dashboards/tool-calls.json and committed. Same six
       template variables. Every panel described. Same Known gaps rule.
     acceptanceCriteria:
-      - "`pnpm dashboards:build` writes compose/grafana/dashboards/tool-calls.json"
+      - "`pnpm dashboards:build` writes
+        compose/grafana/dashboards/tool-calls.json"
       - "Every panel returns data after `pnpm replay --fixtures`"
       - "The mcp against native split panel shows both categories"
       - "Every panel has a non-empty description"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: smoke
     title: Smoke script that proves every panel
     priority: 35
-    dependencies: [dashboard-tools]
+    dependencies: [ dashboard-tools ]
     description: |
       Turn "no panel is created by hand and no panel is empty" from an
       intention into a tested property. Read the enforcement paragraph of
@@ -605,15 +643,17 @@ tickets:
     acceptanceCriteria:
       - "`pnpm smoke` exits 0 within 120 seconds from a stack that is already up"
       - "Every panel on both existing dashboards returns at least one series"
-      - "Deliberately breaking one panel query makes `pnpm smoke` exit non-zero and name that panel"
+      - "Deliberately breaking one panel query makes `pnpm smoke` exit non-zero
+        and name that panel"
       - "`pnpm verify` exits 0"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: mcp-contract
     title: Generic MCP server event contract document
     priority: 30
     planMode: false
-    dependencies: [schema]
+    dependencies: [ schema ]
     description: |
       Write the contract this repo owns, so any MCP server can report its own
       internals without this repo knowing anything about that server. Read the
@@ -639,16 +679,20 @@ tickets:
       implements none of it still works with this system, it simply reports no
       internals. Name no specific product anywhere in the document.
     acceptanceCriteria:
-      - "docs/mcp-server-events.md exists and contains both a MUST and a SHOULD attribute table"
-      - "The document states the primary event name, every transport rule and the conformance procedure"
-      - "`grep -niE 'broker|arm|harness' docs/mcp-server-events.md` returns nothing"
+      - "docs/mcp-server-events.md exists and contains both a MUST and a SHOULD
+        attribute table"
+      - "The document states the primary event name, every transport rule and
+        the conformance procedure"
+      - "`grep -niE 'broker|arm|harness' docs/mcp-server-events.md` returns
+        nothing"
       - "The document states on its first screen that the contract is optional"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: probe-server
     title: Probe Server implementing the contract
     priority: 25
-    dependencies: [mcp-contract, otlp-sender]
+    dependencies: [ mcp-contract, otlp-sender ]
     description: |
       Build the reference server that makes the contract, the conformance
       checker and the MCP Servers dashboard all testable with no external
@@ -677,13 +721,15 @@ tickets:
       - "`pnpm vitest run test/probe-server.test.ts` passes"
       - "A repeated request reports cache hit and upstream_ms 0"
       - "An invalid request reports status error with a closed-set error type"
-      - "A test proves no attribute contains the request text and none exceeds 2 kilobytes"
+      - "A test proves no attribute contains the request text and none exceeds 2
+        kilobytes"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: conform
     title: Conformance checker for any MCP server
     priority: 20
-    dependencies: [probe-server, events-reader]
+    dependencies: [ probe-server, events-reader ]
     description: |
       Make the contract enforceable against any server, not just the one in
       this repo. Read the conformance procedure in ./SPEC.md and in
@@ -710,17 +756,21 @@ tickets:
       The checker must know nothing about the Probe Server beyond the contract.
       It takes an arbitrary command.
     acceptanceCriteria:
-      - "`pnpm mcp:conform -- <the Probe Server start command>` exits 0 and prints a per-check table"
-      - "Removing one MUST attribute from the Probe Server makes the checker exit non-zero and name that attribute"
+      - "`pnpm mcp:conform -- <the Probe Server start command>` exits 0 and
+        prints a per-check table"
+      - "Removing one MUST attribute from the Probe Server makes the checker
+        exit non-zero and name that attribute"
       - "Removing one SHOULD attribute produces a warning and still exits 0"
-      - "`grep -rn 'probe' src/conform` returns nothing, proving the checker is server-agnostic"
+      - "`grep -rn 'probe' src/conform` returns nothing, proving the checker is
+        server-agnostic"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: dashboard-mcp
     title: MCP Servers dashboard
     priority: 15
     planMode: false
-    dependencies: [conform, smoke]
+    dependencies: [ conform, smoke ]
     description: |
       Add the third dashboard. Read the MCP Servers row of the dashboard table
       in ./SPEC.md and build every panel it lists, in that order.
@@ -733,16 +783,18 @@ tickets:
       Server, which produces thirteen real Events. Extend scripts/smoke.ts to
       run that step so the smoke check can fill this dashboard too.
     acceptanceCriteria:
-      - "`pnpm dashboards:build` writes compose/grafana/dashboards/mcp-servers.json"
+      - "`pnpm dashboards:build` writes
+        compose/grafana/dashboards/mcp-servers.json"
       - "`pnpm smoke` exits 0 and now covers all three dashboards"
       - "Every panel returns data, including the cache hit ratio panel"
       - "Every panel has a non-empty description"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: adapter
     title: Adapter interface, Claude Code adapter, and the guide
     priority: 12
-    dependencies: [normaliser]
+    dependencies: [ normaliser ]
     description: |
       Define the only Agent-specific code the Runner is allowed to contain.
       Read "Agent adapters" and "Agents not yet supported" in ./SPEC.md first.
@@ -774,15 +826,18 @@ tickets:
       fixture path.
     acceptanceCriteria:
       - "`pnpm vitest run test/adapter.test.ts` passes with no process spawned"
-      - "Every Claude Code flag used appears in the output of `claude --help`, quoted in docs/agent-events.md"
-      - "docs/adding-an-agent.md exists and states that codex and gemini have no adapter"
+      - "Every Claude Code flag used appears in the output of `claude --help`,
+        quoted in docs/agent-events.md"
+      - "docs/adding-an-agent.md exists and states that codex and gemini have no
+        adapter"
       - "`ls src/adapters` shows exactly index.ts and claude-code.ts"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: runner
     title: Run lifecycle, fixtures, checker and results
     priority: 10
-    dependencies: [adapter, session-index]
+    dependencies: [ adapter, session-index ]
     description: |
       Build the optional task runner. Read "Runner" in ./SPEC.md and implement
       all ten numbered lifecycle steps exactly.
@@ -822,15 +877,18 @@ tickets:
       start a real Agent in any test.
     acceptanceCriteria:
       - "`pnpm vitest run test/runner.test.ts` passes with no real Agent started"
-      - "A test proves the aggregation matches hand-computed totals from a fixture Event list"
-      - "A test proves every per-Run file lands under runs/<run_id>/ and nothing under the home directory is written"
+      - "A test proves the aggregation matches hand-computed totals from a
+        fixture Event list"
+      - "A test proves every per-Run file lands under runs/<run_id>/ and nothing
+        under the home directory is written"
       - "`pnpm verify` exits 0"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: runner-bench
     title: End-to-end bench run against a real session
     priority: 8
-    dependencies: [runner, dashboard-mcp]
+    dependencies: [ runner, dashboard-mcp ]
     description: |
       COSTS MONEY: this ticket starts real Claude Code sessions. Run the two
       commands below once each. If one fails, fix the cause and retry at most
@@ -859,16 +917,19 @@ tickets:
       actually took: the resource attribute path or the time-window fallback.
     acceptanceCriteria:
       - "Both bench commands exit 0 and their Checker passed"
-      - "`pnpm sessions` shows a Session row for each bench Run with the correct run_id"
-      - "The probe Run produced at least one mcp_server_call Event with that run_id"
+      - "`pnpm sessions` shows a Session row for each bench Run with the correct
+        run_id"
+      - "The probe Run produced at least one mcp_server_call Event with that
+        run_id"
       - "The probe tool_call Events carry tool_type mcp and mcp_server probe"
       - "`pnpm smoke` exits 0 and now covers all four dashboards"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: report
     title: Report command
     priority: 5
-    dependencies: [runner-bench]
+    dependencies: [ runner-bench ]
     description: |
       Deliver the comparison output. Read the Report paragraph of "Runner" in
       ./SPEC.md first.
@@ -892,13 +953,14 @@ tickets:
       - "`pnpm report` prints a Task by Variant table from the real bench Runs"
       - "`pnpm report --json` output validates against its Zod schema"
       - "`pnpm report` on an empty table exits 0 with a clear message"
+    complete: true
 
   # ---------------------------------------------------------------------------
   - id: readme
     title: README and clean-clone acceptance sweep
     priority: 1
     planMode: false
-    dependencies: [report]
+    dependencies: [ report ]
     description: |
       Close the run. Read the "Acceptance criteria" section of ./SPEC.md and
       verify every item yourself, in order.
@@ -928,6 +990,12 @@ tickets:
     acceptanceCriteria:
       - "README.md quick start works in the stated order from the current tree"
       - "`pnpm verify` exits 0"
-      - "`pnpm smoke` exits 0 and every panel on all four dashboards returns data"
-      - "`grep -rniE 'broker|\\barm\\b|harness|raw mcp' --include='*.ts' --include='*.md' --include='*.yaml' --include='*.yml' --include='*.json' --exclude=CLAUDE.md --exclude=tickets.yaml . | grep -v node_modules` returns nothing"
-      - "Every acceptance item in SPEC.md is either passing or listed under Known gaps in README.md with its failing command and output"
+      - "`pnpm smoke` exits 0 and every panel on all four dashboards returns
+        data"
+      - "`grep -rniE 'broker|\\barm\\b|harness|raw mcp' --include='*.ts'
+        --include='*.md' --include='*.yaml' --include='*.yml' --include='*.json'
+        --exclude=CLAUDE.md --exclude=tickets.yaml . | grep -v node_modules`
+        returns nothing"
+      - "Every acceptance item in SPEC.md is either passing or listed under
+        Known gaps in README.md with its failing command and output"
+    complete: true
