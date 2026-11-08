@@ -2,10 +2,11 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { TemplateVariableSchema } from '../src/schema/dashboard.js';
+import { DashboardSchema, TemplateVariableSchema } from '../src/schema/dashboard.js';
 import type { TemplateVariable } from '../src/schema/dashboard.js';
 import { QueryResponseSchema, seriesCount } from '../src/schema/query-result.js';
 import {
+  assertAllDashboardsCovered,
   extractTargets,
   formatFailureReport,
   requestFor,
@@ -25,6 +26,7 @@ import type { Failure, PanelTarget } from '../src/smoke/index.js';
 const SESSIONS_FILE = 'compose/grafana/dashboards/sessions.json';
 const TOOL_CALLS_FILE = 'compose/grafana/dashboards/tool-calls.json';
 const RUNS_FILE = 'compose/grafana/dashboards/runs.json';
+const MCP_SERVERS_FILE = 'compose/grafana/dashboards/mcp-servers.json';
 
 function readDashboard(fileName: string): unknown {
   const path = fileURLToPath(new URL(`../compose/grafana/dashboards/${fileName}`, import.meta.url));
@@ -34,6 +36,7 @@ function readDashboard(fileName: string): unknown {
 const sessionsDashboardJson = readDashboard('sessions.json');
 const toolCallsDashboardJson = readDashboard('tool-calls.json');
 const runsDashboardJson = readDashboard('runs.json');
+const mcpServersDashboardJson = readDashboard('mcp-servers.json');
 
 const TitleSchema = z.object({ title: z.string().min(1) });
 
@@ -75,14 +78,20 @@ describe('extractTargets', () => {
     expect(new Set(targets.map((target) => target.panelTitle)).size).toBe(7);
   });
 
-  it('returns an empty array and does not throw for the real runs dashboard, which has no panels', () => {
-    let targets: PanelTarget[] = [];
+  it('returns at least one target per panel, and every returned expr is non-empty, for the real runs dashboard', () => {
+    const dashboard = DashboardSchema.parse(runsDashboardJson);
+    const targets = extractTargets({ file: RUNS_FILE, dashboard: runsDashboardJson });
+    const panelTitlesWithTargets = new Set(targets.map((target) => target.panelTitle));
 
-    expect(() => {
-      targets = extractTargets({ file: RUNS_FILE, dashboard: runsDashboardJson });
-    }).not.toThrow();
+    expect(dashboard.panels.length).toBeGreaterThan(0);
 
-    expect(targets).toEqual([]);
+    for (const panel of dashboard.panels) {
+      expect(panelTitlesWithTargets.has(panel.title)).toBe(true);
+    }
+
+    for (const target of targets) {
+      expect(target.expr.length).toBeGreaterThan(0);
+    }
   });
 
   it('gives every tool-calls target a non-empty panelTitle, refId and expr, and the right dashboardFile and dashboardTitle', () => {
@@ -98,6 +107,46 @@ describe('extractTargets', () => {
       expect(target.dashboardFile).toBe(TOOL_CALLS_FILE);
       expect(target.dashboardTitle).toBe(dashboardTitle);
     }
+  });
+});
+
+describe('assertAllDashboardsCovered', () => {
+  it('returns an empty list for the four real dashboard files, each of which contributes a target', () => {
+    const entries = [
+      {
+        file: SESSIONS_FILE,
+        targets: extractTargets({ file: SESSIONS_FILE, dashboard: sessionsDashboardJson }),
+      },
+      {
+        file: TOOL_CALLS_FILE,
+        targets: extractTargets({ file: TOOL_CALLS_FILE, dashboard: toolCallsDashboardJson }),
+      },
+      {
+        file: RUNS_FILE,
+        targets: extractTargets({ file: RUNS_FILE, dashboard: runsDashboardJson }),
+      },
+      {
+        file: MCP_SERVERS_FILE,
+        targets: extractTargets({ file: MCP_SERVERS_FILE, dashboard: mcpServersDashboardJson }),
+      },
+    ];
+
+    expect(assertAllDashboardsCovered(entries)).toEqual([]);
+  });
+
+  it('returns the one missing name when a panel-less dashboard is included', () => {
+    const entries = [
+      {
+        file: SESSIONS_FILE,
+        targets: extractTargets({ file: SESSIONS_FILE, dashboard: sessionsDashboardJson }),
+      },
+      {
+        file: 'compose/grafana/dashboards/empty.json',
+        targets: [],
+      },
+    ];
+
+    expect(assertAllDashboardsCovered(entries)).toEqual(['compose/grafana/dashboards/empty.json']);
   });
 });
 

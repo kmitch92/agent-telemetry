@@ -54,6 +54,16 @@ export function extractTargets(input: { file: string; dashboard: unknown }): Pan
   return targets;
 }
 
+export interface DashboardCoverage {
+  file: string;
+  targets: readonly PanelTarget[];
+}
+
+/** Returns the dashboard file names among `entries` whose `targets` list is empty. */
+export function assertAllDashboardsCovered(entries: readonly DashboardCoverage[]): string[] {
+  return entries.filter((entry) => entry.targets.length === 0).map((entry) => entry.file);
+}
+
 const MACROS: Readonly<Record<string, string>> = {
   __range: '1h',
   __interval: '1m',

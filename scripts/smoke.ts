@@ -17,11 +17,13 @@ import { z } from 'zod';
 import { TemplateVariableSchema } from '../src/schema/dashboard.js';
 import { QueryResponseSchema } from '../src/schema/query-result.js';
 import {
+  assertAllDashboardsCovered,
   extractTargets,
   formatFailureReport,
   requestFor,
   seriesCount,
   substituteQuery,
+  type DashboardCoverage,
   type Failure,
   type PanelTarget,
 } from '../src/smoke/index.js';
@@ -266,6 +268,19 @@ async function main(): Promise<void> {
       process.exitCode = 1;
       return;
     }
+
+    // The Probe Server emits thirteen mcp_server_call Events through the
+    // Collector, and this is what fills the MCP Servers dashboard.
+    const conform = await runStep(
+      'mcp:conform',
+      'pnpm',
+      ['mcp:conform', '--', 'tsx', 'src/probe-server/cli.ts'],
+      { cwd: REPO_ROOT, env: childEnv },
+    );
+    if (!conform) {
+      process.exitCode = 1;
+      return;
+    }
   }
 
   let dashboardFiles: string[];
@@ -284,6 +299,7 @@ async function main(): Promise<void> {
   }
 
   const prepared: PreparedQuery[] = [];
+  const coverage: DashboardCoverage[] = [];
   let dashboardErrors = 0;
 
   for (const file of dashboardFiles) {
@@ -291,6 +307,7 @@ async function main(): Promise<void> {
       const raw = await readFile(join(DASHBOARDS_DIR, file), 'utf8');
       const dashboard: unknown = JSON.parse(raw);
       const targets = extractTargets({ file, dashboard });
+      coverage.push({ file, targets });
       const templating = TemplatingSchema.parse(dashboard);
       const variables = templating.templating.list;
 
@@ -308,6 +325,27 @@ async function main(): Promise<void> {
       process.exitCode = 1;
       dashboardErrors += 1;
     }
+  }
+
+  const uncovered = assertAllDashboardsCovered(coverage);
+  if (uncovered.length > 0) {
+    const uncoveredFailures: Failure[] = uncovered.map((file) => ({
+      target: {
+        dashboardFile: file,
+        dashboardTitle: file,
+        panelTitle: '(none)',
+        refId: '',
+        expr: '',
+        datasourceType: '',
+        datasourceUid: '',
+        instant: false,
+      },
+      query: '',
+      reason: 'dashboard contributes no target',
+    }));
+    process.stderr.write(`${formatFailureReport(uncoveredFailures)}\n`);
+    process.exitCode = 1;
+    return;
   }
 
   const endMs = Date.now();
@@ -333,6 +371,9 @@ async function main(): Promise<void> {
 
   if (failing.length === 0 && dashboardErrors === 0) {
     const elapsedSeconds = Math.round((Date.now() - startedAtMs) / 1000);
+    process.stdout.write(
+      `dashboards: ${String(dashboardFiles.length)} covered, panel queries: ${String(prepared.length)}\n`,
+    );
     process.stdout.write(
       `targets: ${String(prepared.length)} checked, all return at least one series\n`,
     );
