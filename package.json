@@ -28,7 +28,8 @@
   },
   "dependencies": {
     "zod": "4.6.7",
-    "@duckdb/node-api": "2.0.0-r.1"
+    "@duckdb/node-api": "2.0.0-r.1",
+    "@modelcontextprotocol/sdk": "1.32.2"
   },
   "devDependencies": {
     "typescript": "6.0.3",
