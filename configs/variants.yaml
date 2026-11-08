@@ -1,0 +1,10 @@
+# Variants: the named sets of MCP servers a Run may register for the Agent.
+# `none` registers no MCP server. `probe` registers the in-repo Probe Server.
+variants:
+  none:
+    servers: []
+  probe:
+    servers:
+      - name: probe
+        command: node
+        args: ['node_modules/tsx/dist/cli.mjs', 'src/probe-server/cli.ts']

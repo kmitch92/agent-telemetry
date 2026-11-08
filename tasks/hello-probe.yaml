@@ -1,0 +1,6 @@
+id: hello-probe
+prompt: 'Call the MCP tool named mcp__probe__probe exactly once with the request text ''look up invoice 00000'', then create a file called hello.txt containing the word hello, and do both steps yourself without delegating to a subagent.'
+fixture: fixtures/empty
+checker: test -f hello.txt
+expected_tools: ['mcp__probe__probe']
+timeout_s: 300

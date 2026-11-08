@@ -1,0 +1,5 @@
+id: hello
+prompt: 'Create a file called hello.txt containing the word hello.'
+fixture: fixtures/empty
+checker: test -f hello.txt
+timeout_s: 300
