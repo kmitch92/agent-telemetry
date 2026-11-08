@@ -1,7 +1,9 @@
 {
   "uid": "tool-calls",
-  "title": "Tool Calls",
-  "tags": ["agent-telemetry"],
+  "title": "Tool calls",
+  "tags": [
+    "agent-telemetry"
+  ],
   "timezone": "browser",
   "editable": false,
   "schemaVersion": 39,
@@ -12,7 +14,609 @@
     "to": "now"
   },
   "templating": {
-    "list": []
+    "list": [
+      {
+        "name": "agent",
+        "label": "Agent",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "agent",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "project",
+        "label": "Project",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "project",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "session_id",
+        "label": "Session",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "session_id",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "variant",
+        "label": "Variant",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "variant",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "task",
+        "label": "Task",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "task",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "run_id",
+        "label": "Run",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "run_id",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      }
+    ]
   },
-  "panels": []
+  "panels": [
+    {
+      "id": 1,
+      "type": "barchart",
+      "title": "Calls per tool",
+      "description": "Shows the top 20 tools by call count over the selected range, counting kind=tool_call Events grouped by the tool attribute.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "topk(20, sum by (tool) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"tool_call\" [$__range])))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{tool}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "axisPlacement": "auto"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0,
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "bargauge",
+      "title": "Success rate per tool",
+      "description": "Divides the kind=tool_call Events whose success attribute is true by all kind=tool_call Events, one bar per tool.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (tool) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"tool_call\" | success=\"true\" [$__range])) / sum by (tool) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"tool_call\" [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{tool}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percentunit",
+          "decimals": 3
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "valueMode": "color",
+        "namePlacement": "auto",
+        "sizing": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Duration p50 and p95 per tool",
+      "description": "Reads duration_ms on kind=tool_call Events, the 50th and 95th percentile duration per tool. The Claude Code Transcript parser omits duration_ms when it cannot pair a tool result with its tool use, so a tool with no timing is absent from this panel.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.5, {service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"tool_call\" | unwrap duration_ms [$__interval]) by (tool)",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "p50 {{tool}}"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.95, {service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"tool_call\" | unwrap duration_ms [$__interval]) by (tool)",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "p95 {{tool}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "auto",
+            "pointSize": 5,
+            "barAlignment": 0,
+            "axisPlacement": "auto",
+            "spanNulls": false
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Calls by tool_type, over time",
+      "description": "Reads tool_type on kind=tool_call Events, which the Normaliser sets to mcp when the tool name begins with mcp__ and to native otherwise, counted over time.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (tool_type) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"tool_call\" [$__interval]))",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{tool_type}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "barAlignment": 0,
+            "axisPlacement": "auto",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "bargauge",
+      "title": "Calls per mcp_server",
+      "description": "Reads mcp_server on kind=tool_call Events, which the Normaliser derives from the tool name, and the query filters to tool_type=\"mcp\" so a native tool call never appears as an empty server.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (mcp_server) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"tool_call\" | tool_type=\"mcp\" [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{mcp_server}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "valueMode": "color",
+        "namePlacement": "auto",
+        "sizing": "auto"
+      }
+    },
+    {
+      "id": 6,
+      "type": "barchart",
+      "title": "Result bytes per tool",
+      "description": "Reads result_bytes on kind=tool_call Events, summed per tool over the selected range, and skips an Event where that attribute is absent.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (tool) (sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"tool_call\" | result_bytes != \"\" | unwrap result_bytes [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{tool}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "axisPlacement": "auto"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0,
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "bargauge",
+      "title": "Tool calls per Session",
+      "description": "Counts kind=tool_call Events per Session over the selected range, one bar per session_id.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (session_id) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"tool_call\" [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{session_id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "valueMode": "color",
+        "namePlacement": "auto",
+        "sizing": "auto"
+      }
+    }
+  ]
 }

@@ -1,7 +1,9 @@
 {
   "uid": "mcp-servers",
   "title": "MCP Servers",
-  "tags": ["agent-telemetry"],
+  "tags": [
+    "agent-telemetry"
+  ],
   "timezone": "browser",
   "editable": false,
   "schemaVersion": 39,
@@ -12,7 +14,692 @@
     "to": "now"
   },
   "templating": {
-    "list": []
+    "list": [
+      {
+        "name": "agent",
+        "label": "Agent",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "agent",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "project",
+        "label": "Project",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "project",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "session_id",
+        "label": "Session",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "session_id",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "variant",
+        "label": "Variant",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "variant",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "task",
+        "label": "Task",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "task",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "run_id",
+        "label": "Run",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "run_id",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      }
+    ]
   },
-  "panels": []
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "mcp_server_call rate, per server",
+      "description": "Shows the per-second rate of kind=mcp_server_call Events, one line per service_name.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (service_name) (rate({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" [$__interval]))",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{service_name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "auto",
+            "pointSize": 5,
+            "barAlignment": 0,
+            "axisPlacement": "auto",
+            "spanNulls": false
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Total, internal and upstream milliseconds, p50 and p95, per server",
+      "description": "Reads total_ms, internal_ms and upstream_ms on kind=mcp_server_call Events, the 50th and 95th percentile per server. mcp_server.total_ms is a MUST attribute, so every server appears in the total series, while mcp_server.internal_ms and mcp_server.upstream_ms are SHOULD attributes, so a server that omits them is absent from those series.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.5, {service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" | unwrap mcp_server_total_ms [$__interval]) by (service_name)",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "p50 total {{service_name}}"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.95, {service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" | unwrap mcp_server_total_ms [$__interval]) by (service_name)",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "p95 total {{service_name}}"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.5, {service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" | mcp_server_internal_ms != \"\" | unwrap mcp_server_internal_ms [$__interval]) by (service_name)",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "p50 internal {{service_name}}"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.95, {service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" | mcp_server_internal_ms != \"\" | unwrap mcp_server_internal_ms [$__interval]) by (service_name)",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "p95 internal {{service_name}}"
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.5, {service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" | mcp_server_upstream_ms != \"\" | unwrap mcp_server_upstream_ms [$__interval]) by (service_name)",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "p50 upstream {{service_name}}"
+        },
+        {
+          "refId": "F",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.95, {service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" | mcp_server_upstream_ms != \"\" | unwrap mcp_server_upstream_ms [$__interval]) by (service_name)",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "p95 upstream {{service_name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "auto",
+            "pointSize": 5,
+            "barAlignment": 0,
+            "axisPlacement": "auto",
+            "spanNulls": false
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "bargauge",
+      "title": "Cache hit ratio per server",
+      "description": "Divides the kind=mcp_server_call Events whose cache attribute is hit by all kind=mcp_server_call Events that report a cache state, one bar per service_name. The denominator counts only an Event that reports a cache state, because mcp_server.cache is a SHOULD attribute.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (service_name) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" | mcp_server_cache=\"hit\" [$__range])) / sum by (service_name) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" | mcp_server_cache!=\"\" [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{service_name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percentunit",
+          "decimals": 3
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "valueMode": "color",
+        "namePlacement": "auto",
+        "sizing": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "barchart",
+      "title": "Target distribution, top 10",
+      "description": "Shows the top 10 targets by call count over the selected range, counting kind=mcp_server_call Events grouped by the mcp_server.target attribute.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "topk(10, sum by (mcp_server_target) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" | mcp_server_target != \"\" [$__range])))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{mcp_server_target}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "axisPlacement": "auto"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0,
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Raw bytes against returned bytes, totals and ratio",
+      "description": "Sums mcp_server.raw_bytes and mcp_server.returned_bytes on kind=mcp_server_call Events over the selected range, and divides the returned total by the raw total. The ratio reads NaN when every mcp_server_call Event reports zero raw bytes, which happens when the server made no upstream request.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" | mcp_server_raw_bytes != \"\" | unwrap mcp_server_raw_bytes [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "raw bytes"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" | mcp_server_returned_bytes != \"\" | unwrap mcp_server_returned_bytes [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "returned bytes"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" | mcp_server_returned_bytes != \"\" | unwrap mcp_server_returned_bytes [$__range])) / sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" | mcp_server_raw_bytes != \"\" | unwrap mcp_server_raw_bytes [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "returned over raw"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "percentChangeColorMode": "standard"
+      }
+    },
+    {
+      "id": 6,
+      "type": "bargauge",
+      "title": "Errors by error type",
+      "description": "Reads mcp_server.error.type on kind=mcp_server_call Events whose status attribute is error, counted over the selected range, one bar per error type.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (mcp_server_error_type) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" | mcp_server_status=\"error\" [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{mcp_server_error_type}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "valueMode": "color",
+        "namePlacement": "auto",
+        "sizing": "auto"
+      }
+    },
+    {
+      "id": 7,
+      "type": "bargauge",
+      "title": "Calls per Session",
+      "description": "Counts kind=mcp_server_call Events per Session over the selected range, one bar per session_id.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (session_id) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\"} | kind=\"mcp_server_call\" [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{session_id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "valueMode": "color",
+        "namePlacement": "auto",
+        "sizing": "auto"
+      }
+    }
+  ]
 }
