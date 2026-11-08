@@ -11,11 +11,102 @@ processors:
     check_interval: 1s
     limit_mib: 512
     spike_limit_mib: 128
-  # Placeholder. The `normaliser` ticket fills this processor with the
-  # Normaliser transform statements. Keep the empty list until then.
+  # The Normaliser. One `log_statements` entry, context `log`, in six
+  # ordered groups (A-F). `error_mode: ignore` means a statement that
+  # fails at runtime is skipped silently, which is why every numeric
+  # conversion below carries its own `IsMatch` guard.
   transform:
     error_mode: ignore
-    log_statements: []
+    log_statements:
+      - context: log
+        statements:
+          # Group A - common resource attributes: agent, session_id, and
+          # the derived project (basename of project_path plus the first
+          # 8 hex characters of its sha256), then drop project_path so no
+          # absolute path reaches Loki or events.jsonl (hard prohibition
+          # 4, SPEC.md:298). Idempotent: once project_path is deleted on
+          # the shared resource, later log records in the same batch see
+          # it gone and leave project untouched.
+          - 'set(resource.attributes["agent"], resource.attributes["service.name"]) where resource.attributes["service.name"] != nil'
+          - 'set(resource.attributes["session_id"], log.attributes["session.id"]) where log.attributes["session.id"] != nil'
+          - 'set(resource.attributes["project"], resource.attributes["project_path"]) where resource.attributes["project_path"] != nil'
+          - 'replace_pattern(resource.attributes["project"], "^.*/", "") where resource.attributes["project"] != nil'
+          - 'set(resource.attributes["project"], Concat([resource.attributes["project"], Substring(SHA256(resource.attributes["project_path"]), 0, 8)], "-")) where resource.attributes["project_path"] != nil'
+          - 'delete_key(resource.attributes, "project_path")'
+
+          # Group B - the Kind, matched on the Agent's own event.name. This
+          # is the only place in the repository allowed to know a Claude
+          # Code event name (SPEC.md:221, tickets.yaml:374-375).
+          - 'set(log.attributes["kind"], "model_call") where log.attributes["event.name"] == "api_request"'
+          - 'set(log.attributes["kind"], "tool_call") where log.attributes["event.name"] == "tool_result"'
+          - 'set(log.attributes["kind"], "prompt") where log.attributes["event.name"] == "user_prompt"'
+          - 'set(log.attributes["kind"], "run_start") where log.attributes["event.name"] == "runner.run_start"'
+          - 'set(log.attributes["kind"], "run_end") where log.attributes["event.name"] == "runner.run_end"'
+          # assistant_response carries model but no token counts, so mapping
+          # it to model_call would double-count every model call;
+          # tool_decision carries decision, not the success boolean
+          # tool_call requires; mcp_server_connection is a connection
+          # outcome, and mcp_server_call requires five fields it does not
+          # carry; the three hook_* names have no analogue in the union.
+          # tickets.yaml:386 forbids fabricating a value, so these are
+          # marked rather than mapped. No statement is written for
+          # api_error or mcp_server.call: the recording saw neither
+          # (docs/agent-events.md:334-336), so a mapping would be a guess.
+          - 'set(log.attributes["normaliser.ignored"], true) where IsMatch(log.attributes["event.name"], "^(assistant_response|tool_decision|mcp_server_connection|hook_registered|hook_execution_start|hook_execution_complete)$")'
+
+          # Group C - per-Kind attribute mapping. Every numeric conversion
+          # is guarded by IsMatch, so a value that does not parse leaves
+          # the target unset instead of writing a string into a numeric
+          # field.
+          - 'set(log.attributes["duration_ms"], Int(log.attributes["duration_ms"])) where log.attributes["kind"] == "model_call" and IsMatch(log.attributes["duration_ms"], "^[0-9]+$")'
+          - 'set(log.attributes["input_tokens"], Int(log.attributes["input_tokens"])) where log.attributes["kind"] == "model_call" and IsMatch(log.attributes["input_tokens"], "^[0-9]+$")'
+          - 'set(log.attributes["output_tokens"], Int(log.attributes["output_tokens"])) where log.attributes["kind"] == "model_call" and IsMatch(log.attributes["output_tokens"], "^[0-9]+$")'
+          - 'set(log.attributes["cache_read_tokens"], Int(log.attributes["cache_read_tokens"])) where log.attributes["kind"] == "model_call" and IsMatch(log.attributes["cache_read_tokens"], "^[0-9]+$")'
+          - 'set(log.attributes["cache_write_tokens"], Int(log.attributes["cache_creation_tokens"])) where log.attributes["kind"] == "model_call" and IsMatch(log.attributes["cache_creation_tokens"], "^[0-9]+$")'
+          - 'set(log.attributes["cost_usd"], Double(log.attributes["cost_usd"])) where log.attributes["kind"] == "model_call" and IsMatch(log.attributes["cost_usd"], "^[0-9]+([.][0-9]+)?$")'
+          - 'set(log.attributes["tool"], log.attributes["tool_name"]) where log.attributes["kind"] == "tool_call" and log.attributes["tool_name"] != nil'
+          - 'set(log.attributes["success"], Bool(log.attributes["success"])) where log.attributes["kind"] == "tool_call" and IsMatch(log.attributes["success"], "^(true|false)$")'
+          - 'set(log.attributes["duration_ms"], Int(log.attributes["duration_ms"])) where log.attributes["kind"] == "tool_call" and IsMatch(log.attributes["duration_ms"], "^[0-9]+$")'
+          - 'set(log.attributes["result_bytes"], Int(log.attributes["tool_result_size_bytes"])) where log.attributes["kind"] == "tool_call" and IsMatch(log.attributes["tool_result_size_bytes"], "^[0-9]+$")'
+          - 'set(log.attributes["prompt_length"], Int(log.attributes["prompt_length"])) where log.attributes["kind"] == "prompt" and IsMatch(log.attributes["prompt_length"], "^[0-9]+$")'
+
+          # Group D - derived tool_type and mcp_server, tool_call only.
+          # Order matters: native first, then mcp overrides it, then
+          # mcp_server is copied from tool and the mcp__ prefix and
+          # everything from the first remaining double underscore onward
+          # are stripped, leaving only the server name even when the
+          # server name itself contains an underscore.
+          - 'set(log.attributes["tool_type"], "native") where log.attributes["kind"] == "tool_call"'
+          - 'set(log.attributes["tool_type"], "mcp") where log.attributes["kind"] == "tool_call" and IsMatch(log.attributes["tool"], "^mcp__")'
+          - 'set(log.attributes["mcp_server"], log.attributes["tool"]) where log.attributes["tool_type"] == "mcp"'
+          - 'replace_pattern(log.attributes["mcp_server"], "^mcp__", "") where log.attributes["mcp_server"] != nil'
+          - 'replace_pattern(log.attributes["mcp_server"], "__.*$", "") where log.attributes["mcp_server"] != nil'
+
+          # Group E - keep_keys per Kind. Enforces hard prohibition 3: drop
+          # every attribute that is not a field of that Event, so prompt,
+          # response, user.email and the rest never reach Loki.
+          - 'keep_keys(log.attributes, ["kind", "model", "input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens", "reasoning_tokens", "duration_ms", "cost_usd"]) where log.attributes["kind"] == "model_call"'
+          - 'keep_keys(log.attributes, ["kind", "tool", "success", "tool_type", "duration_ms", "result_bytes", "mcp_server"]) where log.attributes["kind"] == "tool_call"'
+          - 'keep_keys(log.attributes, ["kind", "prompt_length"]) where log.attributes["kind"] == "prompt"'
+          - 'keep_keys(log.attributes, ["kind", "rep"]) where log.attributes["kind"] == "run_start"'
+          - 'keep_keys(log.attributes, ["kind", "rep", "wall_ms", "turns", "tool_calls", "mcp_server_calls", "input_tokens", "output_tokens", "cache_read_tokens", "pass", "timed_out", "expected_tools_hit", "exit_code"]) where log.attributes["kind"] == "run_end"'
+
+          # Group F - backstop for a record that reached no Kind, so a
+          # future unmapped Agent event name keeps none of the personal
+          # or content attributes either. Serves hard prohibitions 3 and 4.
+          - 'delete_key(log.attributes, "prompt")'
+          - 'delete_key(log.attributes, "response")'
+          - 'delete_key(log.attributes, "user.email")'
+          - 'delete_key(log.attributes, "user.id")'
+          - 'delete_key(log.attributes, "user.account_id")'
+          - 'delete_key(log.attributes, "user.account_uuid")'
+          - 'delete_key(log.attributes, "organization.id")'
+  # Drops every record Group B marked normaliser.ignored: the Agent's own
+  # housekeeping events that map to no Kind.
+  filter/unmapped:
+    error_mode: ignore
+    log_conditions:
+      - log.attributes["normaliser.ignored"] == true
   batch:
     timeout: 1s
     send_batch_size: 1024
@@ -49,7 +140,7 @@ service:
   pipelines:
     logs:
       receivers: [otlp]
-      processors: [memory_limiter, transform, batch]
+      processors: [memory_limiter, transform, filter/unmapped, batch]
       exporters: [otlphttp/loki, file, debug]
     metrics:
       receivers: [otlp]
