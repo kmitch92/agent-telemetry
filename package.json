@@ -1,0 +1,54 @@
+{
+  "name": "agent-telemetry",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@10.31.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "compose:up": "docker compose -f compose/docker-compose.yml up -d --wait --wait-timeout 180",
+    "compose:down": "docker compose -f compose/docker-compose.yml down",
+    "compose:logs": "docker compose -f compose/docker-compose.yml logs -f --tail 100",
+    "smoke": "echo \"not implemented\" && exit 1",
+    "replay": "tsx src/replayer/cli.ts",
+    "record": "tsx scripts/record-live.ts",
+    "harvest": "tsx scripts/harvest-transcripts.ts",
+    "bench": "echo \"not implemented\" && exit 1",
+    "report": "echo \"not implemented\" && exit 1",
+    "sessions": "echo \"not implemented\" && exit 1",
+    "mcp:conform": "echo \"not implemented\" && exit 1",
+    "dashboards:build": "echo \"not implemented\" && exit 1",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests",
+    "verify": "pnpm typecheck && pnpm lint && pnpm test",
+    "prepare": "simple-git-hooks"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "@types/node": "26.6.6",
+    "tsx": "4.23.15",
+    "vitest": "5.1.0",
+    "@vitest/coverage-v8": "5.1.0",
+    "eslint": "10.14.0",
+    "typescript-eslint": "8.72.1",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.9.10",
+    "simple-git-hooks": "2.14.0",
+    "lint-staged": "17.6.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --max-warnings=0",
+      "prettier --check"
+    ]
+  }
+}
