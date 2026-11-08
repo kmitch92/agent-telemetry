@@ -35,3 +35,69 @@ export type { SessionRow } from './session.js';
 
 export { ResultsRowSchema } from './results.js';
 export type { ResultsRow } from './results.js';
+
+export { ReportRowSchema, ReportOutputSchema } from './report.js';
+export type { ReportRow, ReportOutput } from './report.js';
+
+export {
+  UsageSchema,
+  ToolUseBlockSchema,
+  ToolResultBlockSchema,
+  TextBlockSchema,
+  TranscriptLineSchema,
+} from './transcript-claude-code.js';
+export type {
+  Usage,
+  ToolUseBlock,
+  ToolResultBlock,
+  TextBlock,
+  TranscriptLine,
+} from './transcript-claude-code.js';
+
+export {
+  DataSourceRefSchema,
+  GridPosSchema,
+  LokiTargetSchema,
+  TransformationSchema,
+  FieldConfigSchema,
+  PanelSchema,
+  TemplateVariableSchema,
+  DashboardSchema,
+} from './dashboard.js';
+export type {
+  DataSourceRef,
+  GridPos,
+  LokiTarget,
+  Transformation,
+  FieldConfig,
+  Panel,
+  TemplateVariable,
+  Dashboard,
+} from './dashboard.js';
+
+export {
+  ConformOtlpAttributeSchema,
+  ConformLogRecordSchema,
+  ConformScopeLogsSchema,
+  ConformResourceLogsSchema,
+  ConformOtlpLineSchema,
+  CheckSeveritySchema,
+  CheckResultSchema,
+  JsonSchemaNodeSchema,
+  ToolDescriptorSchema,
+  ToolsListResultSchema,
+  JsonRpcResponseSchema,
+} from './conform.js';
+export type {
+  ConformOtlpAttribute,
+  ConformLogRecord,
+  ConformScopeLogs,
+  ConformResourceLogs,
+  ConformOtlpLine,
+  CheckSeverity,
+  CheckResult,
+  JsonSchemaNode,
+  ToolDescriptor,
+  ToolsListResult,
+  JsonRpcResponse,
+} from './conform.js';
