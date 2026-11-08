@@ -11,7 +11,7 @@
     "compose:up": "docker compose -f compose/docker-compose.yml up -d --wait --wait-timeout 180",
     "compose:down": "docker compose -f compose/docker-compose.yml down",
     "compose:logs": "docker compose -f compose/docker-compose.yml logs -f --tail 100",
-    "smoke": "echo \"not implemented\" && exit 1",
+    "smoke": "tsx scripts/smoke.ts",
     "replay": "tsx src/replayer/cli.ts",
     "record": "tsx scripts/record-live.ts",
     "harvest": "tsx scripts/harvest-transcripts.ts",
