@@ -113,9 +113,12 @@ Run this checklist before reporting a task done:
 - Only the test files relevant to the change were run. Never run the
   whole suite unless asked.
 - No forbidden word was introduced. Prove it with:
-  `grep -rniE "\bbroker\b|\barm\b|\bharness\b|raw MCP" --exclude-dir=node_modules --exclude-dir=.git --exclude=CLAUDE.md --exclude=tickets.yaml .`
+  `grep -rniE "\bbroker\b|\barm\b|\bharness\b|raw MCP" --exclude-dir=node_modules --exclude-dir=.git --exclude=CLAUDE.md --exclude=tickets.yaml --exclude=pnpm-lock.yaml .`
   The command must return no matches. CLAUDE.md and tickets.yaml state the
   rule and therefore contain the words on purpose, so they are excluded.
+  `pnpm-lock.yaml` is also excluded because it is generated from upstream
+  package names, one of which contains a processor-architecture token that
+  the pattern matches.
 - No file outside the task's stated scope was touched.
 - The working tree contains no unredacted capture.
 
