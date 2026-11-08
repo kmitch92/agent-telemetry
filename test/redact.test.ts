@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   KEEP_NAMES,
@@ -7,6 +8,7 @@ import {
   redactLine,
 } from '../src/redact.js';
 import type { RedactOptions } from '../src/redact.js';
+import { hashId as realHashId } from '../src/hash.js';
 
 /**
  * Stub hashId: pure and deterministic, so the test depends on no
@@ -292,5 +294,191 @@ describe('collectNamedStrings agrees with redactJson', () => {
       if (policyFor(sample.name) === 'keep') continue;
       expect(output).not.toContain(sample.value);
     }
+  });
+});
+
+describe('KEEP_NAMES covers the observed Claude Code attribute keys', () => {
+  it('keeps every structural key the live recording showed', () => {
+    const observedKeepKeys = [
+      'event.timestamp',
+      'tool_name',
+      'tool_source',
+      'decision',
+      'source',
+      'status',
+      'transport_type',
+      'server_scope',
+      'hook_event',
+      'hook_name',
+      'hook_source',
+      'hook_type',
+      'query_source',
+      'effort',
+      'speed',
+      'safe_mode',
+      'managed_only',
+      'terminal.type',
+      'service.version',
+      'os.type',
+      'os.version',
+      'host.arch',
+    ];
+
+    for (const key of observedKeepKeys) {
+      expect(policyFor(key), key).toBe('keep');
+    }
+  });
+
+  it('still redacts every identifying key the live recording showed', () => {
+    const observedRedactKeys = [
+      'user.email',
+      'user.id',
+      'user.account_id',
+      'user.account_uuid',
+      'organization.id',
+      'prompt.id',
+      'client_request_id',
+      'message.uuid',
+      'prompt',
+      'response',
+    ];
+
+    for (const key of observedRedactKeys) {
+      expect(policyFor(key), key).toBe('redact');
+    }
+  });
+
+  it('hashes the observed session identifier key', () => {
+    expect(policyFor('session.id')).toBe('hash');
+  });
+
+  it('keeps a tool name under the observed tool_name key', () => {
+    const attribute = { key: 'tool_name', value: { stringValue: 'mcp__probe__ping' } };
+
+    const output = JSON.stringify(redactJson(attribute, options));
+
+    expect(output).toContain('"stringValue":"mcp__probe__ping"');
+  });
+
+  it('redacts an email even when it sits beside a kept key', () => {
+    const EMAIL_MARKER = 'someone@example.invalid';
+    const attributes = [
+      { key: 'tool_name', value: { stringValue: 'Bash' } },
+      { key: 'user.email', value: { stringValue: EMAIL_MARKER } },
+    ];
+
+    const output = JSON.stringify(redactJson(attributes, options));
+
+    expect(output).not.toContain(EMAIL_MARKER);
+    expect(output).toContain('x'.repeat(EMAIL_MARKER.length));
+  });
+});
+
+const realOptions: RedactOptions = { hashId: realHashId };
+
+/** Matches the 8-4-4-4-12 hexadecimal shape `src/hash.ts` produces. */
+const HASH_SHAPE_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
+const FULL_HASH_SHAPE_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+/** Matches a placeholder of any length, including the empty string. */
+const PLACEHOLDER_PATTERN = /^x*$/;
+
+describe('the committed Fixture is its own proof', () => {
+  const fixtureText = readFileSync('test/fixtures/events/claude-code/01.jsonl', 'utf8');
+  const fixtureLines = fixtureText.split('\n').filter((line) => line.length > 0);
+
+  it('every line parses as JSON', () => {
+    expect(fixtureLines.length).toBeGreaterThan(0);
+
+    for (const line of fixtureLines) {
+      expect(() => {
+        JSON.parse(line);
+      }).not.toThrow();
+    }
+  });
+
+  it('every string in it is kept, blanked, or a hash', () => {
+    for (const line of fixtureLines) {
+      const parsed: unknown = JSON.parse(line);
+      const samples = collectNamedStrings(parsed, 1);
+
+      for (const sample of samples) {
+        const kept = policyFor(sample.name) === 'keep';
+        const blanked = PLACEHOLDER_PATTERN.test(sample.value);
+        const hashed =
+          policyFor(sample.name) === 'hash' && FULL_HASH_SHAPE_PATTERN.test(sample.value);
+
+        expect(
+          kept || blanked || hashed,
+          `name=${String(sample.name)} valueLength=${String(sample.value.length)}`,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it('carries no absolute path and no email address', () => {
+    expect(fixtureText).not.toContain('/home/');
+    expect(fixtureText).not.toContain('/Users/');
+    expect(fixtureText).not.toContain('/root/');
+    expect(fixtureText).not.toContain('@');
+  });
+
+  it('redacting it again changes only the hashed values', () => {
+    for (const line of fixtureLines) {
+      const result = redactLine(line, realOptions);
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        const maskedOriginal = line.replace(HASH_SHAPE_PATTERN, 'HASH');
+        const maskedReRedacted = result.line.replace(HASH_SHAPE_PATTERN, 'HASH');
+
+        expect(maskedReRedacted).toBe(maskedOriginal);
+      }
+    }
+  });
+});
+
+describe('no string from the real capture survives redaction', () => {
+  const SINK_PATH = 'data/events.jsonl';
+  const sinkExists = existsSync(SINK_PATH);
+  const sinkLines = sinkExists
+    ? readFileSync(SINK_PATH, 'utf8')
+        .split('\n')
+        .filter((line) => line.length > 0)
+    : [];
+
+  it.skipIf(!sinkExists)('every sampled non-keep string is absent after redaction', () => {
+    for (const line of sinkLines) {
+      const parsed: unknown = JSON.parse(line);
+      const samples = collectNamedStrings(parsed, 8);
+      const result = redactLine(line, realOptions);
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        for (const sample of samples) {
+          if (policyFor(sample.name) === 'keep') continue;
+
+          expect(
+            result.line.includes(sample.value),
+            `name=${String(sample.name)} valueLength=${String(sample.value.length)}`,
+          ).toBe(false);
+        }
+      }
+    }
+  });
+
+  it.skipIf(!sinkExists)('the sink does carry material the Fixture does not', () => {
+    let foundRedactable = false;
+
+    for (const line of sinkLines) {
+      const parsed: unknown = JSON.parse(line);
+      const samples = collectNamedStrings(parsed, 8);
+
+      if (samples.some((sample) => policyFor(sample.name) !== 'keep' && sample.value.length >= 8)) {
+        foundRedactable = true;
+        break;
+      }
+    }
+
+    expect(foundRedactable).toBe(true);
   });
 });

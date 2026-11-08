@@ -15,7 +15,11 @@ export interface RedactOptions {
 /** What happens to a string found under a given name context. */
 export type Policy = 'keep' | 'hash' | 'redact';
 
-/** Field names whose string value is structural, not content, and is kept verbatim. */
+/**
+ * Field names whose string value is structural, not content, and is kept
+ * verbatim. Holds two groups: the names SPEC.md mandates, and the
+ * structural attribute keys one live Claude Code 2.1.270 recording showed.
+ */
 export const KEEP_NAMES: ReadonlySet<string> = new Set([
   'event.name',
   'eventName',
@@ -51,6 +55,29 @@ export const KEEP_NAMES: ReadonlySet<string> = new Set([
   'mcp_server',
   'error_type',
   'status_code',
+  // Observed in a live Claude Code 2.1.270 recording.
+  'event.timestamp',
+  'tool_name',
+  'tool_source',
+  'decision',
+  'source',
+  'status',
+  'transport_type',
+  'server_scope',
+  'hook_event',
+  'hook_name',
+  'hook_source',
+  'hook_type',
+  'query_source',
+  'effort',
+  'speed',
+  'safe_mode',
+  'managed_only',
+  'terminal.type',
+  'service.version',
+  'os.type',
+  'os.version',
+  'host.arch',
 ]);
 
 /** Matches a session or conversation identifier spelling, whatever the case. */
