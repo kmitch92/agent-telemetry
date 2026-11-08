@@ -1,0 +1,933 @@
+# Planbot Tickets — Agent Telemetry
+#
+# Authoritative design: ./SPEC.md in this repo.
+# Per-repo rules every ticket must obey: ./CLAUDE.md in this repo.
+#
+# Execution model (verified in planbot source, src/core/orchestrator.ts):
+#   - Tickets run in the order they appear in this file. `priority` is NOT
+#     used for scheduling, only for display. Do not reorder to change priority.
+#   - A ticket whose declared dependency FAILED is skipped permanently for
+#     that run. `continueOnError: true` does not override this. The chain
+#     below is therefore also the blast radius: a failure stops everything
+#     downstream of it instead of building on a broken base.
+#   - A failing hook logs a warning and does NOT fail the ticket.
+#
+# Machine facts already verified on 2026-11-08, so no ticket needs to
+# rediscover them:
+#   claude 2.1.270 installed · codex NOT installed · gemini NOT installed
+#   node v22.18.0 · pnpm 10.31.0 · docker compose v2.40.3 (supports --wait)
+#   484 Claude Code transcript files across 7 project directories
+#
+# Tickets that spend money by starting a real Claude Code session:
+#   record-live, runner-bench. Every other ticket is free of agent spend.
+
+# =============================================================================
+# Config
+# =============================================================================
+config:
+  agent: claude-code
+  autoApprove: true
+  continueOnError: true
+  planMode: true
+  maxRetries: 2
+  maxPlanRevisions: 2
+  maxBudgetPerTicket: 15
+
+  # Raised from the defaults of 15 and 30 minutes. These tickets write
+  # schemas, a collector pipeline and dashboard generators, which the
+  # 30 minute default truncates.
+  timeouts:
+    planGeneration: 1800000 # 30 min
+    execution: 5400000 # 90 min
+    approval: 86400000 # 24 h
+    question: 3600000 # 1 h
+  maxTotalTicketTime: "3h"
+
+  pacing:
+    delayBetweenTickets: "60s"
+    delayBetweenRetries: "60s"
+
+  # Deliberately OFF. This feature deletes files under ~/.claude/projects,
+  # which is exactly the source the `harvest` ticket reads and is also the
+  # user's own conversation history. Never enable it in this repo.
+  sessionCleanup:
+    enabled: false
+
+  rateLimitRetry:
+    enabled: true
+    maxWaitTime: "6h"
+    retryBuffer: "60s"
+    fallbackDelay: "5m"
+    notifyOnWait: false
+
+  memoryWarningMb: 6144
+  memoryCriticalMb: 8192
+  diskFloorMb: 2000
+
+# =============================================================================
+# Hooks
+# =============================================================================
+# Kept minimal on purpose. A prompt hook is sent verbatim as the prompt of a
+# fresh `claude -p` process, so a hook naming a skill that does not exist on
+# this machine burns a turn and achieves nothing. Only `/commit` is used.
+# Verification lives in each ticket's acceptanceCriteria instead, where a
+# failure actually blocks the ticket.
+hooks:
+  afterEach:
+    - type: prompt
+      command: /commit
+
+# =============================================================================
+# Tickets
+# =============================================================================
+tickets:
+  # ---------------------------------------------------------------------------
+  - id: scaffold
+    title: Repo scaffold and quality gates
+    priority: 100
+    planMode: false
+    description: |
+      Create the TypeScript project skeleton and every quality gate, with no
+      feature code. Read the "Repo layout" and "Engineering standards"
+      sections of ./SPEC.md first and match them exactly.
+
+      Deliverables:
+      - package.json: name agent-telemetry, private true, type module, engines
+        node >=22. Every script from the SPEC.md package script list present,
+        each either real or a one-line `echo "not implemented" && exit 1` stub.
+        Add `verify` as `pnpm typecheck && pnpm lint && pnpm test`.
+      - Exact dependency versions. No caret and no tilde anywhere in
+        package.json. Commit pnpm-lock.yaml.
+      - tsconfig.json: strict, plus noUncheckedIndexedAccess,
+        exactOptionalPropertyTypes, noImplicitOverride, verbatimModuleSyntax,
+        isolatedModules, moduleResolution bundler, target es2023.
+      - eslint.config.js: flat config, typescript-eslint strictTypeChecked
+        with type-aware linting on src and test, prettier last.
+      - .prettierrc, vitest.config.ts with coverage provider v8 and the
+        per-directory thresholds named in SPEC.md.
+      - .gitignore covering data/, runs/, results.duckdb, node_modules,
+        coverage, .env and every local capture.
+      - A pre-commit hook that runs typecheck and lint on staged files only.
+      - .github/workflows/ci.yml running `pnpm verify` on push.
+      - Empty placeholder directories with a .gitkeep where SPEC.md lists
+        them: src/schema, src/events, src/sessions, src/adapters, src/runner,
+        src/replayer, src/probe-server, src/conform, src/dashboards,
+        src/report, tasks, fixtures, configs, test, scripts, docs.
+
+      Do not write any feature code, any Zod schema or any compose file.
+    acceptanceCriteria:
+      - "`pnpm install` completes with no error"
+      - "`pnpm typecheck` exits 0"
+      - "`pnpm lint` exits 0"
+      - "`grep -E '[\\^~]' package.json` returns no dependency line"
+      - "`pnpm verify` runs all three gates and exits 0 on the empty project"
+
+  # ---------------------------------------------------------------------------
+  - id: schema
+    title: Common event schema in Zod
+    priority: 95
+    dependencies: [scaffold]
+    description: |
+      Write the single source of truth for every shape the system exchanges.
+      Read "Normaliser and common schema", "Session identity" and
+      "MCP server event contract" in ./SPEC.md first.
+
+      Test first. Write the failing tests, see them fail, then implement.
+
+      Deliverables in src/schema/:
+      - events.ts: one Zod discriminated union on `kind` with one member per
+        kind: model_call, tool_call, prompt, api_error, mcp_server_call,
+        run_start, run_end. Attribute lists exactly as SPEC.md states. Every
+        kind carries session_id, agent and project.
+      - resource.ts: the resource attribute schema. agent, session_id and
+        project are required. run_id, task, variant and config are optional
+        and nothing may require them.
+      - task.ts, variant.ts: the Task YAML shape and the configs/variants.yaml
+        shape.
+      - session.ts: the Session summary row, every column SPEC.md lists.
+      - results.ts: the Run results row, every column SPEC.md lists.
+      - index.ts: barrel export of schemas and of types derived with z.infer.
+
+      Rules: a TypeScript type is never hand-written next to a schema, it is
+      always z.infer of that schema. No `any`. No `as` cast. An unset
+      attribute is absent, never a fabricated zero or empty string.
+
+      Tests in test/: one valid and one invalid example per kind, a test that
+      an Event with no run_id still parses, a test that an unknown `kind`
+      value is rejected by the union, and a test asserting the optional
+      resource attributes are genuinely optional.
+    acceptanceCriteria:
+      - "`pnpm vitest run test/schema.test.ts` passes with at least 20 assertions"
+      - "`pnpm typecheck` exits 0"
+      - "`grep -rn ': any' src/schema` returns nothing"
+      - "Every exported type in src/schema is produced by z.infer"
+
+  # ---------------------------------------------------------------------------
+  - id: otlp-sender
+    title: Fire-and-forget OTLP log sender
+    priority: 90
+    dependencies: [schema]
+    description: |
+      Write the one module every component uses to emit an Event. Read the
+      "MCP server event contract" transport rules in ./SPEC.md first, because
+      this sender must satisfy them.
+
+      Test first.
+
+      Deliverable src/events/otlp.ts:
+      - Builds an OTLP over HTTP JSON log record payload from a validated
+        Event plus a resource attribute set, and POSTs it to
+        `<endpoint>/v1/logs`.
+      - Endpoint from OTEL_EXPORTER_OTLP_ENDPOINT. Unset means telemetry is
+        off and the sender makes zero network calls.
+      - Parses OTEL_RESOURCE_ATTRIBUTES in `key=value,key=value` form onto
+        the resource.
+      - Sets the log record event-name field and an `event.name` attribute to
+        the same value. Sets timestamp and observedTimestamp. Sets severity.
+      - Batches with a 1 second scheduled delay and a 2 second export
+        timeout. Flushes on SIGTERM, SIGINT and stdin close, capped at
+        2 seconds.
+      - Never throws. Never blocks the caller. On an unreachable collector it
+        writes one line to stderr at the first failure then stays silent.
+
+      Keep the payload construction a pure function, separate from the module
+      that performs the POST, so the payload is testable with no network.
+
+      Tests: payload construction snapshot against a hand-written expected
+      OTLP JSON body, resource attribute parsing including a malformed value,
+      the sender makes no request when the endpoint variable is unset, the
+      sender resolves normally when the target port refuses the connection,
+      and the first-failure-then-silence behaviour.
+    acceptanceCriteria:
+      - "`pnpm vitest run test/otlp.test.ts` passes"
+      - "A test proves the sender does not throw when nothing listens on the endpoint"
+      - "A test proves zero network calls when OTEL_EXPORTER_OTLP_ENDPOINT is unset"
+      - "`pnpm verify` exits 0"
+
+  # ---------------------------------------------------------------------------
+  - id: events-reader
+    title: events.jsonl reader and pure folds
+    priority: 85
+    dependencies: [schema]
+    description: |
+      Write the reader every downstream consumer uses, and the pure folds that
+      turn Events into summaries. Read "Normaliser and common schema" and
+      "Session identity" in ./SPEC.md first.
+
+      Test first.
+
+      Deliverables in src/events/:
+      - read.ts: reads data/events.jsonl line by line, validates each line
+        against the Event union, and returns both the valid Events and a
+        per-agent count of lines whose `kind` was unset or unknown. A
+        malformed line is counted and skipped, never fatal.
+      - fold.ts: pure reducers over an Event array. One produces the Session
+        summary fields SPEC.md lists. One produces the Run aggregate fields
+        SPEC.md lists for run_end. No input or output of any kind in this
+        file.
+      - settle.ts: the settle rule as a pure predicate plus a thin waiter.
+        Poll until no new line arrives for 5 seconds, 30 seconds maximum.
+
+      Tests: a fixture file in test/fixtures containing valid lines, one
+      unknown kind, one malformed line and one line missing run_id. Assert
+      the valid count, the unknown count per agent, and the folded totals.
+      Assert the fold is a pure function by calling it twice on the same
+      input and comparing deep equality.
+    acceptanceCriteria:
+      - "`pnpm vitest run test/events-reader.test.ts test/fold.test.ts` passes"
+      - "A malformed line is counted and skipped without throwing"
+      - "`grep -rnE \"(readFile|writeFile|fetch|spawn)\" src/events/fold.ts` returns nothing"
+      - "`pnpm verify` exits 0"
+
+  # ---------------------------------------------------------------------------
+  - id: stack
+    title: Compose stack with four services
+    priority: 80
+    dependencies: [scaffold]
+    description: |
+      Bring up the Collector, Loki, Prometheus and Grafana from files in this
+      repo, with nothing created by hand in any user interface. Read the
+      "Stack" section of ./SPEC.md first and match every requirement.
+
+      Docker compose v2.40.3 is installed and supports --wait.
+
+      Deliverables under compose/:
+      - docker-compose.yml: four services, every image tag pinned to an exact
+        version, a healthcheck on each service, named volumes for Loki,
+        Prometheus and Grafana state, and ./data bind-mounted into the
+        Collector.
+      - collector/config.yaml: otlp receiver on 4317 and 4318, the
+        memory_limiter and batch processors, an empty transform processor
+        placeholder with a comment saying the Normaliser ticket fills it, and
+        the exporters SPEC.md names including the file exporter writing
+        /data/events.jsonl.
+      - loki/config.yaml: native OTLP ingest, allow_structured_metadata true,
+        the promoted index label list from SPEC.md, single-node filesystem
+        storage, 30 day retention.
+      - prometheus/prometheus.yml: OTLP receiver enabled, the
+        promote_resource_attributes list from SPEC.md, 30 minute
+        out-of-order window.
+      - grafana/provisioning/datasources/datasources.yaml: fixed unique
+        identifiers `loki` and `prometheus`.
+      - grafana/provisioning/dashboards/dashboards.yaml: provider reading
+        /var/lib/grafana/dashboards into folder "Agent Telemetry", with user
+        interface updates disallowed.
+      - grafana/dashboards/: four placeholder dashboard JSON files named
+        sessions, tool-calls, mcp-servers and runs. Each is a valid empty
+        dashboard with the correct title. The home dashboard is sessions.
+      - Anonymous access enabled with organisation role Admin, so Grafana
+        opens with no login.
+
+      Add compose:up, compose:down and compose:logs as real package scripts.
+
+      After bringing the stack up, send one hand-crafted test Event with the
+      sender from src/events, then report the exact Loki label names that
+      resulted. Record them in a comment in loki/config.yaml, because dots
+      become underscores and the dashboards must use the real names.
+    acceptanceCriteria:
+      - "`pnpm compose:up` returns only when all four services report healthy"
+      - "`curl -s localhost:3000/api/health` returns a 200 with no authentication"
+      - "`curl -s localhost:3100/ready` and `curl -s localhost:9090/-/ready` both report ready"
+      - "`grep -cE ':(latest|[0-9]+)$' compose/docker-compose.yml` shows every image tag pinned and none is `latest`"
+      - "The real Loki label names are recorded in a comment in compose/loki/config.yaml"
+
+  # ---------------------------------------------------------------------------
+  - id: record-live
+    title: Redactor and live Claude Code recording
+    priority: 75
+    dependencies: [stack, otlp-sender, events-reader]
+    description: |
+      COSTS MONEY: this ticket starts one real Claude Code session with a
+      single trivial prompt. That is its entire purpose. Do not run more than
+      three sessions in total.
+
+      Establish ground truth. Every later mapping rule depends on what Claude
+      Code actually emits, not on what any document claims. Read "Replayer
+      and test beds" in ./SPEC.md first.
+
+      Deliverables:
+      - src/redact.ts: a pure redactor. Replace every message text, tool
+        input, tool output and file path with a length-preserving
+        placeholder. Keep timestamps, roles, usage counts, tool names
+        including any `mcp__` prefix, stop reasons, the identifiers that link
+        a tool use to its result, and a hashed session identifier.
+      - test/redact.test.ts: sample strings from each source file and assert
+        none appears in the redacted output. Written first.
+      - scripts/record-live.ts: with the stack up, run
+        `claude -p "List the files in this directory, then stop."` with the
+        telemetry environment variables pointed at http://localhost:4318 and
+        OTEL_RESOURCE_ATTRIBUTES=run_id=probe, wait for the settle rule, then
+        copy that session's raw lines from data/events.jsonl through the
+        redactor into test/fixtures/events/claude-code/01.jsonl.
+      - docs/agent-events.md: the first draft, written only from the
+        recording. Record at the top: the host operating system and shell,
+        `claude --version`, that codex and gemini are not installed, the
+        docker compose version, the node and pnpm versions, and the transcript
+        count. Then record, as observed facts: every event name seen, where
+        the event name lives (an attribute or a record field), every
+        attribute key per event name, the exact attribute that carries the
+        session identifier, and whether OTEL_RESOURCE_ATTRIBUTES was honoured.
+
+      If OTEL_RESOURCE_ATTRIBUTES was not honoured, say so plainly in
+      docs/agent-events.md and describe the time-window fallback that a later
+      ticket must implement. Never claim a mapping you did not observe.
+
+      Add `record` and `harvest` as real package scripts, with harvest still
+      a stub.
+    acceptanceCriteria:
+      - "test/fixtures/events/claude-code/01.jsonl exists and every line parses as JSON"
+      - "`pnpm vitest run test/redact.test.ts` passes and proves no source string survives redaction"
+      - "docs/agent-events.md names the exact attribute carrying the Claude Code session identifier, quoted from the recording"
+      - "docs/agent-events.md states plainly whether OTEL_RESOURCE_ATTRIBUTES was honoured"
+      - "No unredacted capture exists anywhere in the working tree"
+
+  # ---------------------------------------------------------------------------
+  - id: normaliser
+    title: Collector transform for Claude Code and Runner events
+    priority: 70
+    dependencies: [record-live]
+    description: |
+      Make one dashboard query serve every Agent. Read "Normaliser and common
+      schema" in ./SPEC.md, then read docs/agent-events.md, which holds the
+      observed event names and attribute keys. The observed facts win over
+      every example in SPEC.md.
+
+      Deliverable: fill the transform processor in
+      compose/collector/config.yaml. This is the only file in the repo that
+      may know an Agent-specific event name.
+
+      Rules:
+      - Derive the `agent` resource attribute from service.name.
+      - Derive `project` as `<basename>-<first 8 hex of sha256 of the
+        absolute working directory path>`.
+      - Map every observed Claude Code event to its kind and attribute set.
+      - Map runner.run_start and runner.run_end straight through.
+      - Derive `tool_type` as mcp when the tool name starts with `mcp__`,
+        otherwise native. Derive `mcp_server` by parsing the server segment
+        out of `mcp__<server>__<tool>`, and leave it unset for a native tool.
+      - An attribute the Agent does not expose stays unset. Never fabricate a
+        value.
+      - An unknown event name passes through with `kind` unset.
+
+      Integration test test/normaliser.integration.test.ts: bring the real
+      stack up, replay test/fixtures/events/claude-code/*.jsonl into the
+      Collector unchanged, read the resulting data/events.jsonl, and assert
+      every output line parses against the Event union and that the unknown
+      kind count for claude-code is zero. Mark the test so it is skipped when
+      the stack is not running, and say so in its name.
+
+      Update docs/agent-events.md with the verified mapping table.
+    acceptanceCriteria:
+      - "`pnpm compose:up && pnpm vitest run test/normaliser.integration.test.ts` passes"
+      - "The unknown kind count for claude-code is exactly 0"
+      - "Every line of the Collector output parses against the Event union"
+      - "`grep -rn 'claude' src/ --include=*.ts | grep -i 'event.name'` returns nothing, proving no Agent event name leaked out of the collector config"
+
+  # ---------------------------------------------------------------------------
+  - id: harvest
+    title: Harvest and redact transcript fixtures
+    priority: 65
+    dependencies: [record-live]
+    description: |
+      Build the offline test bed. 484 Claude Code transcript files exist
+      across 7 project directories under ~/.claude/projects. Read "Replayer
+      and test beds" in ./SPEC.md first.
+
+      Deliverable scripts/harvest-transcripts.ts:
+      - Scan ~/.claude/projects for *.jsonl. Read only. Never write, move or
+        delete anything under that directory.
+      - Select the 20 most recent sessions that each contain at least 5 tool
+        calls.
+      - Pass every selected file through src/redact.ts and write the result to
+        test/fixtures/transcripts/claude-code/<hash>.jsonl, where the hash is
+        of the source session identifier.
+      - Print a one-line summary per selected file: source session hash, line
+        count, tool call count.
+
+      Extend test/redact.test.ts so it samples strings from the real
+      transcript sources and asserts none appears in any committed fixture.
+
+      Make `harvest` a real package script.
+    acceptanceCriteria:
+      - "`pnpm harvest` writes exactly 20 files under test/fixtures/transcripts/claude-code/"
+      - "`pnpm vitest run test/redact.test.ts` passes against the new fixtures"
+      - "`git status` shows no modification or deletion anywhere under the home directory"
+      - "No absolute home-directory path appears in any committed fixture"
+
+  # ---------------------------------------------------------------------------
+  - id: transcript-parser
+    title: Claude Code transcript parser
+    priority: 60
+    dependencies: [harvest]
+    description: |
+      Turn a transcript into Events so every dashboard can be verified without
+      starting an Agent. Read "Replayer and test beds" in ./SPEC.md first.
+
+      Test first, against the real redacted fixtures.
+
+      Deliverable src/replayer/parsers/claude-code.ts, a pure function from
+      transcript lines to an Event array:
+      - A user message becomes a `prompt` Event.
+      - An assistant message carrying usage becomes a `model_call` Event, with
+        tokens from the usage block and duration_ms as the gap from the
+        previous message timestamp.
+      - A tool use block paired with its tool result by their link identifier
+        becomes one `tool_call` Event, with duration_ms as the result
+        timestamp minus the use timestamp, result_bytes as the length of the
+        result content, and success as the negation of the error flag.
+      - session_id comes from the transcript. project comes from the encoded
+        directory name in the transcript path.
+      - An unpaired tool use is reported in the parser result, never silently
+        dropped and never given a fabricated duration.
+
+      Also write src/replayer/parsers/index.ts holding the parser interface
+      that a second Agent's parser would implement, with no second
+      implementation.
+
+      Tests: parse every fixture; assert no fixture throws; assert the Event
+      counts per kind for at least three named fixtures; assert every produced
+      Event parses against the Event union; assert the unpaired tool use case
+      is reported.
+    acceptanceCriteria:
+      - "`pnpm vitest run test/transcript-parser.test.ts` passes"
+      - "All 20 fixtures parse with no exception"
+      - "Every produced Event validates against the Event union"
+      - "Coverage of src/replayer/parsers meets the SPEC.md threshold"
+
+  # ---------------------------------------------------------------------------
+  - id: replayer
+    title: Replay command-line interface
+    priority: 55
+    dependencies: [transcript-parser, normaliser]
+    description: |
+      Make the whole pipeline verifiable with no Agent running. Read "Replayer
+      and test beds" in ./SPEC.md first.
+
+      Deliverable src/replayer/cli.ts, wired to the `replay` package script:
+      - `pnpm replay --fixtures` parses every transcript fixture into Events
+        and sends them through src/events/otlp.ts. Each transcript gets its
+        own session_id taken from the transcript, plus a synthetic run_id and
+        a synthetic run_end Event so the Runs dashboard has data.
+      - `pnpm replay --events` re-sends the recorded raw Event fixtures
+        unchanged, which exercises the Normaliser exactly as a live Agent
+        would.
+      - Both modes print the count sent, then wait for the settle rule, then
+        print the count that reached data/events.jsonl.
+      - A `--dry-run` flag prints what would be sent and sends nothing.
+
+      Mark every synthetic run_id with a recognisable prefix so a synthetic
+      Run is never mistaken for a real one in the Results table.
+    acceptanceCriteria:
+      - "`pnpm replay --fixtures` reports a sent count equal to the received count"
+      - "`pnpm replay --events` reports a sent count equal to the received count"
+      - "`pnpm replay --dry-run --fixtures` sends nothing, proven by data/events.jsonl being unchanged"
+      - "data/events.jsonl contains Events for more than one distinct session_id after a fixtures replay"
+
+  # ---------------------------------------------------------------------------
+  - id: session-index
+    title: Session index and the sessions command
+    priority: 50
+    dependencies: [replayer]
+    description: |
+      Deliver the feature that distinguishes one Session from another. Read
+      "Session identity" in ./SPEC.md first and implement every rule there.
+
+      Test first.
+
+      Deliverables in src/sessions/:
+      - index.ts: a pure fold from an Event array to Session summary rows,
+        reusing src/events/fold.ts. Implement the idle boundary rule with
+        SESSION_IDLE_MINUTES default 30: a Session stays open until no Event
+        carrying its session_id has arrived for that long. A late Event for a
+        closed Session reopens it and the summary is recomputed.
+      - store.ts: the only module touching DuckDB. Upserts one row per
+        Session into results.duckdb, table `sessions`, with every column
+        SPEC.md lists. Idempotent: running it twice over the same Events
+        leaves the same rows.
+      - cli.ts: `pnpm sessions` prints the table newest first, with --agent,
+        --project, --since and --json filters.
+      - The synthetic session identifier fallback, with the row marked
+        synthetic_session_id true. Never fabricate an identifier that looks
+        real.
+      - project_path is stored locally and is never sent in any Event.
+
+      Tests: two Sessions of the same agent in the same project overlapping in
+      time stay separate rows. A Session with a 40 minute gap closes and a
+      late Event reopens it. The upsert is idempotent. Token and cost totals
+      match a hand-computed expected value. A run_id, when present, lands on
+      the row as a label and is null for an ad hoc Session.
+    acceptanceCriteria:
+      - "`pnpm vitest run test/session-index.test.ts` passes"
+      - "A test proves two concurrent Sessions in the same project stay separate rows"
+      - "A test proves the upsert is idempotent across two runs"
+      - "`pnpm replay --fixtures && pnpm sessions` prints at least 20 distinct Sessions"
+      - "`pnpm sessions --json` output validates against the Session summary schema"
+
+  # ---------------------------------------------------------------------------
+  - id: dashboard-sessions
+    title: Dashboard generator and the Sessions dashboard
+    priority: 45
+    dependencies: [session-index]
+    description: |
+      Dashboards are code. Read "Dashboards" in ./SPEC.md first, and use the
+      real Loki label names recorded in compose/loki/config.yaml, not the
+      dotted attribute names.
+
+      Deliverables:
+      - src/dashboards/lib.ts: typed builders for a dashboard, a panel, a
+        template variable and a target. Every builder output validates
+        against a Zod dashboard model schema before it is written.
+      - src/dashboards/sessions.ts: the Sessions dashboard with every panel
+        SPEC.md lists for it, in that order. Every panel carries a
+        description naming what it shows and which kind it reads.
+      - The six template variables SPEC.md requires, all multi-select, all
+        populated from Loki label values.
+      - src/dashboards/build.ts, wired to `dashboards:build`, writing
+        compose/grafana/dashboards/sessions.json. Generated output is
+        committed.
+      - Sessions is the Grafana home dashboard.
+
+      Rule: if a panel cannot be fed from a replayed Event, delete the panel
+      and add a line to a Known gaps list you create in README.md. Never feed
+      a panel fabricated data.
+    acceptanceCriteria:
+      - "`pnpm dashboards:build` writes compose/grafana/dashboards/sessions.json and the file is committed"
+      - "Grafana opens with the Sessions dashboard as home and no login"
+      - "Every panel on the Sessions dashboard returns data after `pnpm replay --fixtures`"
+      - "Every panel has a non-empty description"
+      - "Any deleted panel is listed under Known gaps in README.md"
+
+  # ---------------------------------------------------------------------------
+  - id: dashboard-tools
+    title: Tool Calls dashboard
+    priority: 40
+    planMode: false
+    dependencies: [dashboard-sessions]
+    description: |
+      Add the second dashboard using the generator built in the previous
+      ticket. Read the Tool calls row of the dashboard table in ./SPEC.md and
+      build every panel it lists, in that order.
+
+      Deliverable src/dashboards/tool-calls.ts, generated into
+      compose/grafana/dashboards/tool-calls.json and committed. Same six
+      template variables. Every panel described. Same Known gaps rule.
+    acceptanceCriteria:
+      - "`pnpm dashboards:build` writes compose/grafana/dashboards/tool-calls.json"
+      - "Every panel returns data after `pnpm replay --fixtures`"
+      - "The mcp against native split panel shows both categories"
+      - "Every panel has a non-empty description"
+
+  # ---------------------------------------------------------------------------
+  - id: smoke
+    title: Smoke script that proves every panel
+    priority: 35
+    dependencies: [dashboard-tools]
+    description: |
+      Turn "no panel is created by hand and no panel is empty" from an
+      intention into a tested property. Read the enforcement paragraph of
+      "Dashboards" in ./SPEC.md first.
+
+      Deliverable scripts/smoke.ts, wired to the `smoke` package script, which
+      in this order:
+      1. Brings the stack up and waits for all four services to be healthy.
+      2. Runs `replay --fixtures`, then `replay --events`.
+      3. Reads every dashboard JSON in compose/grafana/dashboards/, extracts
+         every panel target query, and runs it against the Loki or Prometheus
+         HTTP API over the last hour.
+      4. Fails, listing dashboard, panel title and query, on any query that
+         returns no series.
+      5. Prints http://localhost:3000 on success.
+
+      It must handle a template variable inside a query by substituting a
+      match-everything value. It must have a non-zero exit code on failure.
+      Iterate on the dashboards and the Normaliser until smoke passes. Never
+      make smoke pass by sending fabricated Events or by deleting an assertion.
+    acceptanceCriteria:
+      - "`pnpm smoke` exits 0 within 120 seconds from a stack that is already up"
+      - "Every panel on both existing dashboards returns at least one series"
+      - "Deliberately breaking one panel query makes `pnpm smoke` exit non-zero and name that panel"
+      - "`pnpm verify` exits 0"
+
+  # ---------------------------------------------------------------------------
+  - id: mcp-contract
+    title: Generic MCP server event contract document
+    priority: 30
+    planMode: false
+    dependencies: [schema]
+    description: |
+      Write the contract this repo owns, so any MCP server can report its own
+      internals without this repo knowing anything about that server. Read the
+      "MCP server event contract" section of ./SPEC.md first: it holds the
+      complete attribute list and every transport rule.
+
+      Deliverable docs/mcp-server-events.md, a standalone document a
+      third-party author can implement from with no other file. It must state:
+      - The primary event name and where it is set.
+      - Every MUST attribute with its name, type and enum values, in a table.
+      - Every SHOULD attribute with its name and type, in a table.
+      - The resource attribute rules.
+      - Every secondary event.
+      - Every transport rule: endpoint variable, off-by-default behaviour,
+        batch timings, flush on signals, never await inside the call path,
+        never throw, the 2 kilobyte attribute ceiling, and the rule that no
+        attribute may carry request or response text.
+      - The conformance procedure, its thirteen-Event assertion and what
+        warns rather than fails.
+      - A short worked example of one valid event payload.
+
+      The document is optional and additive: say so at the top. A server that
+      implements none of it still works with this system, it simply reports no
+      internals. Name no specific product anywhere in the document.
+    acceptanceCriteria:
+      - "docs/mcp-server-events.md exists and contains both a MUST and a SHOULD attribute table"
+      - "The document states the primary event name, every transport rule and the conformance procedure"
+      - "`grep -niE 'broker|arm|harness' docs/mcp-server-events.md` returns nothing"
+      - "The document states on its first screen that the contract is optional"
+
+  # ---------------------------------------------------------------------------
+  - id: probe-server
+    title: Probe Server implementing the contract
+    priority: 25
+    dependencies: [mcp-contract, otlp-sender]
+    description: |
+      Build the reference server that makes the contract, the conformance
+      checker and the MCP Servers dashboard all testable with no external
+      service. Read "MCP server event contract" in ./SPEC.md and the contract
+      document docs/mcp-server-events.md you are implementing.
+
+      Deliverable src/probe-server/: a stdio MCP server on
+      @modelcontextprotocol/sdk, version pinned exactly.
+      - One tool named `probe`, input `{ request: string }`.
+      - Picks a target from a fixed in-repo catalogue by keyword.
+      - Sleeps between 50 and 400 milliseconds.
+      - Caches by a hash of the request, so a repeated request reports
+        cache hit and upstream_ms 0.
+      - Returns a canned result.
+      - Emits one `mcp_server.call` Event per call carrying every MUST and
+        every SHOULD attribute in the contract.
+      - Deliberately fails on an invalid request with status error and a
+        closed-set error type.
+      - Never echoes the request text into any attribute.
+
+      Tests: drive the server over stdio in-process, assert the tool responds,
+      assert a repeat request reports a cache hit, assert the invalid request
+      reports an error with a closed-set type, and assert no emitted attribute
+      contains the request text or exceeds 2 kilobytes.
+    acceptanceCriteria:
+      - "`pnpm vitest run test/probe-server.test.ts` passes"
+      - "A repeated request reports cache hit and upstream_ms 0"
+      - "An invalid request reports status error with a closed-set error type"
+      - "A test proves no attribute contains the request text and none exceeds 2 kilobytes"
+
+  # ---------------------------------------------------------------------------
+  - id: conform
+    title: Conformance checker for any MCP server
+    priority: 20
+    dependencies: [probe-server, events-reader]
+    description: |
+      Make the contract enforceable against any server, not just the one in
+      this repo. Read the conformance procedure in ./SPEC.md and in
+      docs/mcp-server-events.md first.
+
+      Deliverable src/conform/, wired to the `mcp:conform` package script,
+      taking the command that starts the server under test as its argument:
+      1. Start that command over stdio with the OTLP endpoint set and
+         OTEL_RESOURCE_ATTRIBUTES=run_id=conform-<ulid>.
+      2. Drive the fixed script: initialize, six distinct tool calls, the same
+         six again, one deliberately invalid request, then close stdin.
+      3. Wait for the settle rule.
+      4. Assert every check SPEC.md lists, including exactly thirteen
+         `mcp_server.call` Events with unique call identifiers, every MUST
+         attribute present with the right type and enum membership, the
+         invalid request reporting an error of a closed-set type, no attribute
+         over 2 kilobytes, no attribute containing the sent request text, and
+         run_id present on every Event.
+      5. Warn, without failing, on a missing SHOULD attribute and on a missing
+         `mcp_server.start`.
+      6. Print a per-check pass or fail table and exit non-zero on any MUST
+         failure.
+
+      The checker must know nothing about the Probe Server beyond the contract.
+      It takes an arbitrary command.
+    acceptanceCriteria:
+      - "`pnpm mcp:conform -- <the Probe Server start command>` exits 0 and prints a per-check table"
+      - "Removing one MUST attribute from the Probe Server makes the checker exit non-zero and name that attribute"
+      - "Removing one SHOULD attribute produces a warning and still exits 0"
+      - "`grep -rn 'probe' src/conform` returns nothing, proving the checker is server-agnostic"
+
+  # ---------------------------------------------------------------------------
+  - id: dashboard-mcp
+    title: MCP Servers dashboard
+    priority: 15
+    planMode: false
+    dependencies: [conform, smoke]
+    description: |
+      Add the third dashboard. Read the MCP Servers row of the dashboard table
+      in ./SPEC.md and build every panel it lists, in that order.
+
+      Deliverable src/dashboards/mcp-servers.ts, generated into
+      compose/grafana/dashboards/mcp-servers.json and committed. Same six
+      template variables. Every panel described. Same Known gaps rule.
+
+      Feed the dashboard by running `pnpm mcp:conform` against the Probe
+      Server, which produces thirteen real Events. Extend scripts/smoke.ts to
+      run that step so the smoke check can fill this dashboard too.
+    acceptanceCriteria:
+      - "`pnpm dashboards:build` writes compose/grafana/dashboards/mcp-servers.json"
+      - "`pnpm smoke` exits 0 and now covers all three dashboards"
+      - "Every panel returns data, including the cache hit ratio panel"
+      - "Every panel has a non-empty description"
+
+  # ---------------------------------------------------------------------------
+  - id: adapter
+    title: Adapter interface, Claude Code adapter, and the guide
+    priority: 12
+    dependencies: [normaliser]
+    description: |
+      Define the only Agent-specific code the Runner is allowed to contain.
+      Read "Agent adapters" and "Agents not yet supported" in ./SPEC.md first.
+
+      Before relying on any flag, run `claude --help` and confirm the real
+      flag names on version 2.1.270. Correct the adapter to match the help
+      output, not any document. Record the verified flags in
+      docs/agent-events.md.
+
+      Deliverables:
+      - src/adapters/index.ts: the Adapter type with exactly four members:
+        name, launch, telemetryEnv and transcriptPaths. Nothing else.
+      - src/adapters/claude-code.ts: the only implementation. Headless launch
+        with a per-Run MCP configuration file, strict MCP configuration so
+        globally configured servers cannot leak into a Run, and the
+        permissions flag. Telemetry environment variables pointed at the
+        Collector with 1 second export intervals. Prompt logging left off.
+        Transcript locator for ~/.claude/projects.
+      - docs/adding-an-agent.md: every step and every fact a contributor must
+        verify to add a second Agent. State plainly that codex and gemini are
+        not installed on this machine, that no event mapping is claimed for
+        them, and that no adapter code exists for them.
+
+      Write no Codex adapter and no Gemini adapter. Do not guess their flags.
+
+      Tests: telemetryEnv returns the expected variable set for a given
+      endpoint and resource map. launch builds the expected argument vector,
+      asserted without spawning a process. transcriptPaths finds a known
+      fixture path.
+    acceptanceCriteria:
+      - "`pnpm vitest run test/adapter.test.ts` passes with no process spawned"
+      - "Every Claude Code flag used appears in the output of `claude --help`, quoted in docs/agent-events.md"
+      - "docs/adding-an-agent.md exists and states that codex and gemini have no adapter"
+      - "`ls src/adapters` shows exactly index.ts and claude-code.ts"
+
+  # ---------------------------------------------------------------------------
+  - id: runner
+    title: Run lifecycle, fixtures, checker and results
+    priority: 10
+    dependencies: [adapter, session-index]
+    description: |
+      Build the optional task runner. Read "Runner" in ./SPEC.md and implement
+      all ten numbered lifecycle steps exactly.
+
+      Deliverables:
+      - configs/variants.yaml: the Variant definitions. A Variant is a named
+        set of MCP servers and nothing more. Ship `none`, which registers no
+        server, and `probe`, which registers the Probe Server. Do not invent
+        any other built-in name.
+      - tasks/hello.yaml: prompt "Create a file called hello.txt containing
+        the word hello.", fixture fixtures/empty, checker `test -f hello.txt`,
+        timeout 300 seconds.
+      - fixtures/empty/: a minimal fixture directory.
+      - src/runner/: lifecycle, fresh fixture copy with a git initialisation
+        so the Checker can diff, per-Run MCP configuration written under
+        runs/<run_id>/, run_start and run_end emission, the settle rule, the
+        aggregation from data/events.jsonl filtered by run_id, the Checker
+        execution, and the Results row written to results.duckdb table `runs`
+        with every column SPEC.md lists.
+      - Timeout handling: SIGTERM, then SIGKILL after 10 seconds, then mark
+        the Run timed out.
+      - cold and warm cache handling, variant-agnostic: cold starts every MCP
+        server in the Variant fresh for the Run, warm performs one unrecorded
+        priming Run of the same Task first and keeps those processes alive.
+      - The run_id to Session link: a Run maps to one or more Sessions, and
+        run_id is a label on the Session row, never its key.
+      - If docs/agent-events.md records that OTEL_RESOURCE_ATTRIBUTES was not
+        honoured, implement the time-window fallback it describes and mark
+        the affected rows.
+
+      Isolation rules, all mandatory: never resume a session, never read or
+      write anything under ~/.claude, ~/.codex or ~/.gemini except reading a
+      Transcript, and keep every per-Run file under runs/<run_id>/.
+
+      Test the pure parts first: aggregation from a fixture Event list,
+      Results row construction, timeout state machine, fixture copy. Do not
+      start a real Agent in any test.
+    acceptanceCriteria:
+      - "`pnpm vitest run test/runner.test.ts` passes with no real Agent started"
+      - "A test proves the aggregation matches hand-computed totals from a fixture Event list"
+      - "A test proves every per-Run file lands under runs/<run_id>/ and nothing under the home directory is written"
+      - "`pnpm verify` exits 0"
+
+  # ---------------------------------------------------------------------------
+  - id: runner-bench
+    title: End-to-end bench run against a real session
+    priority: 8
+    dependencies: [runner, dashboard-mcp]
+    description: |
+      COSTS MONEY: this ticket starts real Claude Code sessions. Run the two
+      commands below once each. If one fails, fix the cause and retry at most
+      twice, then stop and report.
+
+      Prove the Runner end to end on this machine. Read the Runner acceptance
+      items in ./SPEC.md first.
+
+      Step 1, no MCP server:
+      `pnpm bench --task hello --agent claude-code --variant none --reps 1`
+      It must run a real session, pass its Checker, and produce one Results
+      row, one run_end Event, and one Session row carrying that run_id.
+
+      Step 2, through the Probe Server:
+      `pnpm bench --task hello --agent claude-code --variant probe --reps 1`
+      It must additionally produce at least one `mcp_server_call` Event with
+      that run_id, and the tool_call Events for the probe tool must carry
+      tool_type mcp and mcp_server probe.
+
+      Then add src/dashboards/runs.ts, generated into
+      compose/grafana/dashboards/runs.json and committed, with every panel
+      the Runs row of the dashboard table in ./SPEC.md lists. Extend
+      scripts/smoke.ts to cover it.
+
+      Record in docs/agent-events.md which identification path Claude Code
+      actually took: the resource attribute path or the time-window fallback.
+    acceptanceCriteria:
+      - "Both bench commands exit 0 and their Checker passed"
+      - "`pnpm sessions` shows a Session row for each bench Run with the correct run_id"
+      - "The probe Run produced at least one mcp_server_call Event with that run_id"
+      - "The probe tool_call Events carry tool_type mcp and mcp_server probe"
+      - "`pnpm smoke` exits 0 and now covers all four dashboards"
+
+  # ---------------------------------------------------------------------------
+  - id: report
+    title: Report command
+    priority: 5
+    dependencies: [runner-bench]
+    description: |
+      Deliver the comparison output. Read the Report paragraph of "Runner" in
+      ./SPEC.md first.
+
+      Test first, against a seeded in-memory results table.
+
+      Deliverable src/report/, wired to the `report` package script:
+      - `pnpm report [--task <id>]` prints, per Task and Variant: n, pass
+        rate, median turns, median input tokens per turn, median wall time,
+        and p95 tool duration.
+      - One DuckDB query. No post-processing arithmetic in TypeScript that the
+        query could do.
+      - A `--json` flag whose output validates against a Zod schema.
+      - An empty results table prints a clear "no Runs recorded" line and
+        exits 0, not an error.
+
+      Add a companion `pnpm sessions` cross-reference line to the report
+      output: the count of Sessions that carry no run_id, labelled as ad hoc.
+    acceptanceCriteria:
+      - "`pnpm vitest run test/report.test.ts` passes against a seeded table"
+      - "`pnpm report` prints a Task by Variant table from the real bench Runs"
+      - "`pnpm report --json` output validates against its Zod schema"
+      - "`pnpm report` on an empty table exits 0 with a clear message"
+
+  # ---------------------------------------------------------------------------
+  - id: readme
+    title: README and clean-clone acceptance sweep
+    priority: 1
+    planMode: false
+    dependencies: [report]
+    description: |
+      Close the run. Read the "Acceptance criteria" section of ./SPEC.md and
+      verify every item yourself, in order.
+
+      Deliverable README.md:
+      - One paragraph saying what this system is and what it is not.
+      - Quick start in exact order: compose up, smoke, sessions, bench,
+        report. Every command copy-pasteable.
+      - A Session-first explanation: what a Session is, how two concurrent
+        Sessions stay separate, and what the idle boundary rule does.
+      - How to define a Variant in configs/variants.yaml, with one worked
+        example that names no specific product.
+      - How to point the system at an MCP server that implements
+        docs/mcp-server-events.md, and how to check it with `pnpm mcp:conform`.
+      - A pointer to docs/adding-an-agent.md.
+      - A Known gaps section listing every acceptance item that does not pass,
+        each with the exact failing command and the single most informative
+        line of its output.
+      - No praise, no marketing, no emoji. Plain English, short sentences.
+
+      Then run the full sweep and report the result of each item verbatim:
+      `pnpm compose:up`, `pnpm verify`, `pnpm smoke`, `pnpm sessions`,
+      `pnpm report`, `pnpm mcp:conform` against the Probe Server.
+
+      Finally, run the forbidden-word check from ./CLAUDE.md across the whole
+      repo and fix every hit.
+    acceptanceCriteria:
+      - "README.md quick start works in the stated order from the current tree"
+      - "`pnpm verify` exits 0"
+      - "`pnpm smoke` exits 0 and every panel on all four dashboards returns data"
+      - "`grep -rniE 'broker|\\barm\\b|harness|raw mcp' --include='*.ts' --include='*.md' --include='*.yaml' --include='*.yml' --include='*.json' --exclude=CLAUDE.md --exclude=tickets.yaml . | grep -v node_modules` returns nothing"
+      - "Every acceptance item in SPEC.md is either passing or listed under Known gaps in README.md with its failing command and output"

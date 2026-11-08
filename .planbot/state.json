@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "currentTicketId": null,
+  "currentPhase": "idle",
+  "sessionId": null,
+  "pauseRequested": false,
+  "startedAt": "2026-11-08T00:13:16.749Z",
+  "lastUpdatedAt": "2026-11-08T00:13:16.749Z",
+  "pendingQuestions": [],
+  "loopState": null
+}
