@@ -118,6 +118,27 @@ export function toAnyValue(value: string | number | boolean): AnyValue {
 }
 
 /**
+ * Converts one proto3 JSON `AnyValue` back into a plain value, the inverse
+ * of `toAnyValue`. `intValue` is a decimal string on the wire, so it goes
+ * through `Number(...)`; a non-finite result (a value that is not really a
+ * number) yields `undefined` rather than `NaN`, so a caller never has to
+ * special-case `NaN`.
+ */
+export function fromAnyValue(value: AnyValue): string | number | boolean | undefined {
+  if ('stringValue' in value) {
+    return value.stringValue;
+  }
+  if ('boolValue' in value) {
+    return value.boolValue;
+  }
+  if ('doubleValue' in value) {
+    return value.doubleValue;
+  }
+  const numeric = Number(value.intValue);
+  return Number.isFinite(numeric) ? numeric : undefined;
+}
+
+/**
  * Splits `raw` on `,`, then each entry on the first `=` only, trims both
  * sides, percent-decodes the value, and keeps the literal text when
  * decoding throws. Skips an entry with no `=`, an empty key, or an empty
