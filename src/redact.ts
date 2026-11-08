@@ -78,12 +78,28 @@ export const KEEP_NAMES: ReadonlySet<string> = new Set([
   'os.type',
   'os.version',
   'host.arch',
+  // Counts Claude Code sends inside a stringValue wrapper, not intValue.
+  'prompt_length',
+  'duration_ms',
+  'tool_result_size_bytes',
 ]);
 
 /** Matches a session or conversation identifier spelling, whatever the case. */
 const SESSION_NAME_PATTERN = /session|conversation/i;
 /** Matches the "id" or "uuid" half of a session-identifier spelling. */
 const ID_NAME_PATTERN = /id|uuid/i;
+
+/**
+ * Longest structural object key a measured corpus of 20 real Claude Code
+ * transcripts ever used: 28 characters, for `additionalWorkingDirectories`.
+ * A key longer than this bound is content, not structure.
+ */
+const MAX_STRUCTURAL_KEY_LENGTH = 40;
+/**
+ * Every one of the 29 content keys found in that same 20-transcript corpus
+ * held a path separator or whitespace; no structural key ever did.
+ */
+const CONTENT_KEY_PATTERN = /[/\\\s]/;
 
 /**
  * Decides the policy for a name context. Deny by default: an unrecognised
@@ -99,6 +115,16 @@ export function policyFor(name: string | undefined): Policy {
     return 'keep';
   }
   return 'redact';
+}
+
+/**
+ * True when `key` itself is content rather than structure: longer than
+ * `MAX_STRUCTURAL_KEY_LENGTH`, or shaped like a path or a sentence. A
+ * content key must be replaced by a same-length placeholder, the same
+ * treatment a content string value already gets.
+ */
+export function isContentKey(key: string): boolean {
+  return key.length > MAX_STRUCTURAL_KEY_LENGTH || CONTENT_KEY_PATTERN.test(key);
 }
 
 /** A same-length placeholder: length preserving, nothing else preserved. */
@@ -148,15 +174,19 @@ function walkJson(
     }
 
     const result: Record<string, unknown> = {};
-    for (const key of Object.keys(value)) {
+    Object.keys(value).forEach((key, index) => {
       const child = value[key];
       if (NUMERIC_WRAPPER_NAMES.has(key)) {
         result[key] = child;
-        continue;
+        return;
       }
       const childName = TRANSPARENT_NAMES.has(key) ? name : key;
-      result[key] = walkJson(child, childName, hashId);
-    }
+      const outputKey = isContentKey(key) ? placeholder(key.length) : key;
+      const finalKey = Object.hasOwn(result, outputKey)
+        ? `${outputKey}-${String(index)}`
+        : outputKey;
+      result[finalKey] = walkJson(child, childName, hashId);
+    });
     return result;
   }
 
@@ -251,5 +281,32 @@ function collectStrings(
 
   if (typeof value === 'string' && value.length >= minLength) {
     results.push({ name, value });
+  }
+}
+
+/**
+ * Walks `value` and collects every object key found, through nested
+ * objects and arrays alike, but never an array index: an array contributes
+ * no key of its own, only the keys its elements hold.
+ */
+export function collectObjectKeys(value: unknown): string[] {
+  const results: string[] = [];
+  collectKeys(value, results);
+  return results;
+}
+
+function collectKeys(value: unknown, results: string[]): void {
+  if (Array.isArray(value)) {
+    for (const element of value) {
+      collectKeys(element, results);
+    }
+    return;
+  }
+
+  if (isRecord(value)) {
+    for (const key of Object.keys(value)) {
+      results.push(key);
+      collectKeys(value[key], results);
+    }
   }
 }

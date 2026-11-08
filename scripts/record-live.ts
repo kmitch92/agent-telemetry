@@ -183,7 +183,9 @@ function buildChildEnv(): NodeJS.ProcessEnv {
   env['OTEL_EXPORTER_OTLP_ENDPOINT'] = 'http://localhost:4318';
   env['OTEL_LOGS_EXPORT_INTERVAL'] = '1000';
   env['OTEL_METRIC_EXPORT_INTERVAL'] = '1000';
-  env['OTEL_RESOURCE_ATTRIBUTES'] = 'run_id=probe';
+  // The Collector derives `project` from `project_path` and then deletes it,
+  // so the absolute working-directory path never leaves the Collector.
+  env['OTEL_RESOURCE_ATTRIBUTES'] = `run_id=probe,project_path=${process.cwd()}`;
   return env;
 }
 
