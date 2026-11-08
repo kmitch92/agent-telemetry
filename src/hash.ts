@@ -23,3 +23,12 @@ export function hashId(value: string): string {
     digest.slice(20, 32),
   ].join('-');
 }
+
+/**
+ * Returns the full lowercase SHA-256 hex digest of `value`, with no slicing
+ * and no hyphen reshaping. This is the plain digest. A caller that needs an
+ * identifier-shaped digest uses `hashId` instead.
+ */
+export function sha256Hex(value: string): string {
+  return createHash('sha256').update(value).digest('hex');
+}
