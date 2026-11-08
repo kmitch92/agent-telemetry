@@ -18,7 +18,7 @@ This guide states every step and every fact a contributor must verify before a s
 
 7. **Confirm the Agent never logs prompt text by default, and keep it that way.** Inspect the recorded Events for prompt text, tool input, and tool output. Name the switch that would enable prompt logging and state that it stays unset, as `OTEL_LOG_USER_PROMPTS` stays unset for Claude Code. Hard prohibition 3 in CLAUDE.md forbids exporting any of the three.
 
-8. **Add the three required pieces, each backed by a passing test against a real recording.** Add one new Adapter implementation file in `/home/kiel/dev/agent-telemetry/src/adapters/`, named after the Agent, exporting a value of the `Adapter` type. Add one parser in `/home/kiel/dev/agent-telemetry/src/replayer/parsers/`, and one section in `/home/kiel/dev/agent-telemetry/docs/agent-events.md`. Commit a redacted real recording as a fixture under `/home/kiel/dev/agent-telemetry/test/fixtures/`. SPEC.md line 501 also requires one row in the Adapter's internal registry. No registry module exists today, because `/home/kiel/dev/agent-telemetry/src/adapters/index.ts` holds the `Adapter` type and nothing else, per the adapter ticket in `/home/kiel/dev/agent-telemetry/tickets.yaml`. The contributor who adds the second Agent creates that registry, and the Runner then resolves an Agent name through it. Until all the pieces exist and the test passes, the Agent is not supported.
+8. **Add the three required pieces, each backed by a passing test against a real recording.** Add one new Adapter implementation file in `src/adapters/`, named after the Agent, exporting a value of the `Adapter` type. Add one parser in `src/replayer/parsers/`, and one section in `docs/agent-events.md`. Commit a redacted real recording as a fixture under `test/fixtures/`. SPEC.md line 501 also requires one row in the Adapter's internal registry. No registry module exists today, because `src/adapters/index.ts` holds the `Adapter` type and nothing else, per the adapter ticket in `tickets.yaml`. The contributor who adds the second Agent creates that registry, and the Runner then resolves an Agent name through it. Until all the pieces exist and the test passes, the Agent is not supported.
 
 ## The Adapter contract
 
@@ -43,7 +43,7 @@ For `launch`, the Claude Code implementation writes the MCP configuration file i
 ## Agents without an Adapter
 
 - `codex` and `gemini` are not installed on this machine. Running `codex --version` and `gemini --version` both report command not found, as SPEC.md lines 507 and 508 record.
-- Neither Agent has an Adapter. `/home/kiel/dev/agent-telemetry/src/adapters/` holds one implementation only, `claude-code.ts`.
+- Neither Agent has an Adapter. `src/adapters/` holds one implementation only, `claude-code.ts`.
 - This repository claims no event name, no attribute key, no launch flag, and no telemetry switch for either Agent, because no live recording exists to verify any of it.
 - Until a contributor follows the eight steps above and commits a live recording, no Adapter, no mapping table row, and no dashboard panel may reference either Agent. See SPEC.md lines 505 to 513.
 
