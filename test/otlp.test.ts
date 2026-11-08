@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createOtlpSender } from '../src/events/otlp.js';
 import { MCP_SERVER_CALL, RUNNER_RUN_START } from '../src/events/event-names.js';
 import type { Event } from '../src/schema/index.js';
+import { z } from 'zod';
 
 function validEvent(): Event {
   return {
@@ -253,5 +254,58 @@ describe('createOtlpSender, installSignalHandlers false', () => {
 
     const after = process.listenerCount('SIGINT');
     expect(after).toBe(before);
+  });
+});
+
+const PostedPayloadSchema = z.object({
+  resourceLogs: z.array(
+    z.object({
+      scopeLogs: z.array(
+        z.object({
+          logRecords: z.array(z.object({ timeUnixNano: z.string() })),
+        }),
+      ),
+    }),
+  ),
+});
+
+describe('createOtlpSender timestamps', () => {
+  it('gives 200 Events emitted in a tight loop 200 distinct timeUnixNano values', async () => {
+    const postedBodies: string[] = [];
+    const fetchImpl = vi.fn((_url: string | URL | Request, init?: RequestInit) => {
+      if (init !== undefined && typeof init.body === 'string') {
+        postedBodies.push(init.body);
+      }
+      return Promise.resolve(new Response(null, { status: 200 }));
+    });
+
+    const sender = createOtlpSender({
+      serviceName: 'test-service',
+      env: { OTEL_EXPORTER_OTLP_ENDPOINT: 'http://localhost:4318' },
+      fetchImpl,
+      installSignalHandlers: false,
+    });
+
+    for (let i = 0; i < 200; i += 1) {
+      sender.emit(validEvent(), MCP_SERVER_CALL);
+    }
+
+    await sender.flush();
+
+    const timestamps: string[] = postedBodies.flatMap((body) => {
+      const payload = PostedPayloadSchema.parse(JSON.parse(body));
+      const bodyTimestamps: string[] = [];
+      for (const resourceLog of payload.resourceLogs) {
+        for (const scopeLog of resourceLog.scopeLogs) {
+          for (const logRecord of scopeLog.logRecords) {
+            bodyTimestamps.push(logRecord.timeUnixNano);
+          }
+        }
+      }
+      return bodyTimestamps;
+    });
+
+    expect(timestamps).toHaveLength(200);
+    expect(new Set(timestamps).size).toBe(200);
   });
 });

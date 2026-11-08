@@ -1,4 +1,5 @@
 import { EventSchema, type Event } from '../schema/index.js';
+import { createMonotonicNanoClock } from './clock.js';
 import {
   buildLogsPayload,
   parseResourceAttributes,
@@ -21,7 +22,7 @@ export interface SenderOptions {
   serviceName: string;
   env?: Record<string, string | undefined>;
   fetchImpl?: typeof fetch;
-  /** Nanoseconds. Defaults to a wall-clock-derived value. */
+  /** Nanoseconds. Defaults to a strictly increasing nanosecond clock. */
   now?: () => bigint;
   stderr?: { write: (line: string) => unknown };
   /** Default true. */
@@ -37,10 +38,6 @@ export interface OtlpSender {
   emit(event: Event, eventName: string): void;
   flush(): Promise<void>;
   shutdown(): Promise<void>;
-}
-
-function defaultNow(): bigint {
-  return BigInt(Date.now()) * 1_000_000n;
 }
 
 function isFailureStatus(status: number): boolean {
@@ -69,7 +66,7 @@ export function createOtlpSender(options: SenderOptions): OtlpSender {
 
   const serviceName = options.serviceName;
   const fetchImpl = options.fetchImpl ?? fetch;
-  const now = options.now ?? defaultNow;
+  const now = options.now ?? createMonotonicNanoClock();
   const stderr = options.stderr ?? process.stderr;
   const installSignalHandlers = options.installSignalHandlers ?? true;
   const scheduledDelayMs = options.scheduledDelayMs ?? 1000;
