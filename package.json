@@ -15,11 +15,11 @@
     "replay": "tsx src/replayer/cli.ts",
     "record": "tsx scripts/record-live.ts",
     "harvest": "tsx scripts/harvest-transcripts.ts",
-    "bench": "echo \"not implemented\" && exit 1",
-    "report": "echo \"not implemented\" && exit 1",
+    "bench": "tsx src/runner/cli.ts",
+    "report": "tsx src/report/cli.ts",
     "sessions": "tsx src/sessions/cli.ts",
-    "mcp:conform": "echo \"not implemented\" && exit 1",
-    "dashboards:build": "echo \"not implemented\" && exit 1",
+    "mcp:conform": "tsx src/conform/cli.ts",
+    "dashboards:build": "tsx src/dashboards/build.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run --passWithNoTests",
@@ -29,7 +29,8 @@
   "dependencies": {
     "zod": "4.6.7",
     "@duckdb/node-api": "2.0.0-r.1",
-    "@modelcontextprotocol/sdk": "1.32.2"
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "yaml": "2.9.1"
   },
   "devDependencies": {
     "typescript": "6.0.3",
