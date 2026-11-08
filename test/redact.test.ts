@@ -26,7 +26,7 @@ function extractAttributeStringValue(json: string, name: string): string | undef
 
 describe('redactJson over an OTLP log envelope', () => {
   const PROMPT_MARKER = 'prompt-marker-text-one';
-  const PATH_MARKER = '/home/kiel/secret-path-marker-two';
+  const PATH_MARKER = '/home/user/secret-path-marker-two';
   const TOOL_INPUT_MARKER = 'tool-input-blob-marker-three';
   const TOOL_OUTPUT_MARKER = 'tool-output-blob-marker-four';
   const SESSION_ID = 'a1b2c3d4-e5f6-47a8-9b0c-d1e2f3a4b5c6';
@@ -268,7 +268,7 @@ describe('collectNamedStrings agrees with redactJson', () => {
   });
 
   it('still reports a real text string under its attribute key', () => {
-    const PATH_VALUE = '/home/kiel/some-long-path';
+    const PATH_VALUE = '/home/user/some-long-path';
     const attribute = { key: 'file_path', value: { stringValue: PATH_VALUE } };
 
     const collected = collectNamedStrings(attribute, 8);
