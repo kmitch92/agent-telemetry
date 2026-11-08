@@ -1,0 +1,18 @@
+{
+  "uid": "runs",
+  "title": "Runs",
+  "tags": ["agent-telemetry"],
+  "timezone": "browser",
+  "editable": false,
+  "schemaVersion": 39,
+  "version": 0,
+  "refresh": "30s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "panels": []
+}

@@ -1,0 +1,120 @@
+name: agent-telemetry
+
+services:
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.165.0
+    container_name: agent-telemetry-collector
+    # The image default is uid 10001, which cannot write to a host ./data
+    # owned by uid 1000. Without this override the `file` exporter fails.
+    user: "1000:1000"
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./collector/config.yaml:/etc/otelcol-contrib/config.yaml:ro
+      - ../data:/data
+      # The Collector image is distroless: one binary, no shell and no HTTP
+      # client. BusyBox is mounted read-only so the healthcheck below can
+      # call the health_check extension from inside the container.
+      - type: image
+        source: busybox:1.38.0-musl
+        target: /busybox
+        read_only: true
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "13133:13133"
+    healthcheck:
+      test: ["CMD", "/busybox/bin/busybox", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:13133/"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    depends_on:
+      loki:
+        condition: service_healthy
+      prometheus:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [agent-telemetry]
+
+  loki:
+    image: grafana/loki:3.5.12
+    container_name: agent-telemetry-loki
+    command: ["-config.file=/etc/loki/config.yaml"]
+    volumes:
+      - ./loki/config.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    healthcheck:
+      test: ["CMD", "/busybox/wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3100/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+    networks: [agent-telemetry]
+
+  prometheus:
+    image: prom/prometheus:v3.16.0
+    container_name: agent-telemetry-prometheus
+    # Overriding command discards the image default, so --config.file and
+    # --storage.tsdb.path are repeated here alongside the OTLP receiver flag.
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-otlp-receiver"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9090/-/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+    networks: [agent-telemetry]
+
+  grafana:
+    image: grafana/grafana:11.6.16
+    container_name: agent-telemetry-grafana
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_AUTH_BASIC_ENABLED: "false"
+      GF_USERS_DEFAULT_THEME: "dark"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: "/var/lib/grafana/dashboards/sessions.json"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    depends_on:
+      loki:
+        condition: service_healthy
+      prometheus:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [agent-telemetry]
+
+volumes:
+  loki-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  agent-telemetry:
+    driver: bridge

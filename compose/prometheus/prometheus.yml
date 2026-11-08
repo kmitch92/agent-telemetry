@@ -1,0 +1,26 @@
+# Prometheus configuration for the agent-telemetry Stack.
+#
+# The OTLP receiver is enabled by the `--web.enable-otlp-receiver` command
+# line flag in compose/docker-compose.yml, not by this file. There are no
+# scrape jobs: every series arrives through the OTLP receiver from the
+# Collector.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+otlp:
+  promote_resource_attributes:
+    - service.name
+    - agent
+    - session_id
+    - project
+    - run_id
+    - task
+    - variant
+
+storage:
+  tsdb:
+    out_of_order_time_window: 30m
+
+scrape_configs: []

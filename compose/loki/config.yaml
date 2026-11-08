@@ -1,0 +1,88 @@
+# Loki single-node configuration for the agent-telemetry Stack.
+#
+# VERIFIED LOKI LABEL NAMES
+# -------------------------
+# Observed on 2026-11-08 after one `prompt` Event sent through
+# scripts/send-test-event.ts. OTLP attribute names lose their dots, so
+# `service.name` becomes `service_name`. Dashboards MUST use the names
+# below, not the dotted names in the otlp_config block further down.
+#
+# `curl -s http://localhost:3100/loki/api/v1/labels` returned:
+#     agent  project  service_name  session_id
+#
+# `curl -s --get http://localhost:3100/loki/api/v1/series \
+#     --data-urlencode 'match[]={service_name="claude-code"}'` returned one
+# stream with exactly those four index labels.
+#
+# `run_id`, `task` and `variant` are promoted by the attributes_config
+# below, but they did not appear because the test Event carried none. They
+# become labels on the first Runner Event that sets them.
+#
+# Everything else stays structured metadata, not an index label. The same
+# ingest showed these, read from a query_range response:
+#     detected_level  event_name  kind  observed_timestamp  prompt_length
+#     scope_name  scope_version  severity_number  severity_text
+# `detected_level` is added by Loki itself, not by the Collector.
+
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: info
+
+common:
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /loki/tsdb-index
+    cache_location: /loki/tsdb-cache
+
+limits_config:
+  allow_structured_metadata: true
+  retention_period: 720h
+  otlp_config:
+    resource_attributes:
+      attributes_config:
+        - action: index_label
+          attributes:
+            - service.name
+            - agent
+            - session_id
+            - project
+            - run_id
+            - task
+            - variant
+
+compactor:
+  working_directory: /loki/compactor
+  retention_enabled: true
+  delete_request_store: filesystem
+
+ruler:
+  storage:
+    type: local
+    local:
+      directory: /loki/rules
+
+analytics:
+  reporting_enabled: false
