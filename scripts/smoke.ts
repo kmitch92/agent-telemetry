@@ -6,7 +6,9 @@
  * fails unless each one returns at least one series. This is the
  * imperative shell: every spawn, every file-system read and every `fetch`
  * lives here, and the pure substitution and request-building logic lives in
- * `../src/smoke/index.ts`, which this script only calls.
+ * `../src/smoke/index.ts`, which this script only calls. A dashboard file
+ * whose basename starts with `explore-` is parsed and covered but excluded
+ * from the pass/fail check; see `EXPLORE_PREFIX` below.
  */
 import { spawn } from 'node:child_process';
 import { readdir, readFile } from 'node:fs/promises';
@@ -51,6 +53,25 @@ const HEALTH_POLL_MS = 1000;
 const QUERY_CONCURRENCY = 6;
 const RETRY_MAX_ATTEMPTS = 5;
 const RETRY_DELAY_MS = 3000;
+
+// A dashboard file whose basename starts with this prefix is an exploration
+// board (SPEC.md's dashboards section): it is still parsed, still counted
+// as covered by `assertAllDashboardsCovered`, and still listed in the
+// per-file panel count below, but none of its panel queries are added to
+// `prepared`, so an empty panel under review never fails this check. The
+// four production dashboards are never excluded.
+const EXPLORE_PREFIX = 'explore-';
+
+// A dashboard file whose basename starts with this prefix is one of the
+// experimental "live, now" boards (SPEC.md's live dashboards section): the
+// same treatment as `EXPLORE_PREFIX` above, for the same reason. An
+// experimental board built for the operator to review and prune is not a
+// release gate, so an empty panel on it never fails this check either.
+const LIVE_PREFIX = 'live-';
+
+function isExcludedFromGate(basename: string): boolean {
+  return basename.startsWith(EXPLORE_PREFIX) || basename.startsWith(LIVE_PREFIX);
+}
 
 const TemplatingSchema = z.object({
   templating: z.object({ list: z.array(TemplateVariableSchema) }),
@@ -318,7 +339,9 @@ async function main(): Promise<void> {
 
       for (const target of targets) {
         const query = substituteQuery({ expr: target.expr, variables });
-        prepared.push({ target: { ...target, expr: query }, query });
+        if (!isExcludedFromGate(file)) {
+          prepared.push({ target: { ...target, expr: query }, query });
+        }
       }
     } catch (error) {
       process.stderr.write(`${file}: ${describeError(error)}\n`);
