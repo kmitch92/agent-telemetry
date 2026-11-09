@@ -828,7 +828,7 @@
             "lastNotNull"
           ],
           "fields": "",
-          "values": false
+          "values": true
         },
         "orientation": "horizontal",
         "displayMode": "gradient",

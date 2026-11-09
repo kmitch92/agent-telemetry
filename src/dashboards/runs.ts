@@ -10,7 +10,7 @@ import { dashboard, labelVariable, lokiTarget, panel, selector } from './lib.js'
 const SEL = selector('run_end');
 
 const BARGAUGE_OPTIONS = {
-  reduceOptions: { calcs: ['lastNotNull'], fields: '', values: false },
+  reduceOptions: { calcs: ['lastNotNull'], fields: '', values: true },
   orientation: 'horizontal',
   displayMode: 'gradient',
   showUnfilled: true,
@@ -48,7 +48,7 @@ const passRateByVariantPanel = panel({
   unit: 'percentunit',
   decimals: 3,
   options: {
-    reduceOptions: { calcs: ['lastNotNull'], fields: '', values: false },
+    reduceOptions: { calcs: ['lastNotNull'], fields: '', values: true },
     orientation: 'auto',
     textMode: 'auto',
     colorMode: 'value',
@@ -165,7 +165,7 @@ const timedOutRunsPanel = panel({
     }),
   ],
   options: {
-    reduceOptions: { calcs: ['lastNotNull'], fields: '', values: false },
+    reduceOptions: { calcs: ['lastNotNull'], fields: '', values: true },
     orientation: 'auto',
     textMode: 'auto',
     colorMode: 'value',
@@ -214,6 +214,12 @@ const runEndEventsPanel = panel({
     cellHeight: 'sm',
     footer: { show: false, reducer: ['sum'], countRows: false, fields: '' },
   },
+  overrides: [
+    {
+      matcher: { id: 'byName', options: 'Last Event' },
+      properties: [{ id: 'unit', value: 'dateTimeAsIso' }],
+    },
+  ],
   transformations: [
     { id: 'joinByField', options: { byField: 'run_id', mode: 'outer' } },
     {

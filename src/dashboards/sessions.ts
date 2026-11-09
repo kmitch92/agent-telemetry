@@ -292,7 +292,7 @@ const promptsPanel = panel({
   ],
   unit: 'short',
   options: {
-    reduceOptions: { calcs: ['lastNotNull'], fields: '', values: false },
+    reduceOptions: { calcs: ['lastNotNull'], fields: '', values: true },
     orientation: 'horizontal',
     displayMode: 'gradient',
     showUnfilled: true,

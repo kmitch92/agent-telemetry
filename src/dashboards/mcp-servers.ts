@@ -121,7 +121,7 @@ const cacheHitRatioPanel = panel({
   unit: 'percentunit',
   decimals: 3,
   options: {
-    reduceOptions: { calcs: ['lastNotNull'], fields: '', values: false },
+    reduceOptions: { calcs: ['lastNotNull'], fields: '', values: true },
     orientation: 'horizontal',
     displayMode: 'gradient',
     showUnfilled: true,
@@ -206,6 +206,18 @@ const bytesPanel = panel({
   },
   overrides: [
     {
+      matcher: { id: 'byFrameRefID', options: 'A' },
+      properties: [{ id: 'displayName', value: 'raw bytes' }],
+    },
+    {
+      matcher: { id: 'byFrameRefID', options: 'B' },
+      properties: [{ id: 'displayName', value: 'returned bytes' }],
+    },
+    {
+      matcher: { id: 'byFrameRefID', options: 'C' },
+      properties: [{ id: 'displayName', value: 'returned over raw' }],
+    },
+    {
       matcher: { id: 'byFrameRefID', options: 'C' },
       properties: [{ id: 'unit', value: 'percentunit' }],
     },
@@ -230,7 +242,7 @@ const errorsByTypePanel = panel({
   ],
   unit: 'short',
   options: {
-    reduceOptions: { calcs: ['lastNotNull'], fields: '', values: false },
+    reduceOptions: { calcs: ['lastNotNull'], fields: '', values: true },
     orientation: 'horizontal',
     displayMode: 'gradient',
     showUnfilled: true,
@@ -260,7 +272,7 @@ const callsPerSessionPanel = panel({
   ],
   unit: 'short',
   options: {
-    reduceOptions: { calcs: ['lastNotNull'], fields: '', values: false },
+    reduceOptions: { calcs: ['lastNotNull'], fields: '', values: true },
     orientation: 'horizontal',
     displayMode: 'gradient',
     showUnfilled: true,

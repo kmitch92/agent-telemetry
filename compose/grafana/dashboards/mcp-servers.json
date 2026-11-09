@@ -425,7 +425,7 @@
             "lastNotNull"
           ],
           "fields": "",
-          "values": false
+          "values": true
         },
         "orientation": "horizontal",
         "displayMode": "gradient",
@@ -562,6 +562,42 @@
           {
             "matcher": {
               "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "raw bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "returned bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "C"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "returned over raw"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
               "options": "C"
             },
             "properties": [
@@ -634,7 +670,7 @@
             "lastNotNull"
           ],
           "fields": "",
-          "values": false
+          "values": true
         },
         "orientation": "horizontal",
         "displayMode": "gradient",
@@ -689,7 +725,7 @@
             "lastNotNull"
           ],
           "fields": "",
-          "values": false
+          "values": true
         },
         "orientation": "horizontal",
         "displayMode": "gradient",
