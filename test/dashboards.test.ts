@@ -1,8 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import type { GridPos } from '../src/schema/dashboard.js';
+import type { GridPos, PanelType } from '../src/schema/dashboard.js';
 import { DashboardSchema } from '../src/schema/dashboard.js';
-import { panel, renderDashboard } from '../src/dashboards/lib.js';
+import { dashboard, lokiTarget, panel, renderDashboard } from '../src/dashboards/lib.js';
+import { exploreActivityDashboard } from '../src/dashboards/explore-activity.js';
+import { exploreLatencyDashboard } from '../src/dashboards/explore-latency.js';
+import { exploreTokensDashboard } from '../src/dashboards/explore-tokens.js';
 import { mcpServersDashboard } from '../src/dashboards/mcp-servers.js';
 import { runsDashboard } from '../src/dashboards/runs.js';
 import { sessionsDashboard } from '../src/dashboards/sessions.js';
@@ -466,5 +469,76 @@ describe('runsDashboard', () => {
   it('matches the committed dashboard JSON', () => {
     const committed = readFileSync('compose/grafana/dashboards/runs.json', 'utf8');
     expect(committed).toBe(renderDashboard(runsDashboard));
+  });
+});
+
+describe('exploreLatencyDashboard', () => {
+  it('validates against DashboardSchema', () => {
+    expect(() => DashboardSchema.parse(exploreLatencyDashboard)).not.toThrow();
+  });
+
+  it('matches the committed dashboard JSON', () => {
+    const committed = readFileSync('compose/grafana/dashboards/explore-latency.json', 'utf8');
+    expect(committed).toBe(renderDashboard(exploreLatencyDashboard));
+  });
+});
+
+describe('exploreTokensDashboard', () => {
+  it('validates against DashboardSchema', () => {
+    expect(() => DashboardSchema.parse(exploreTokensDashboard)).not.toThrow();
+  });
+
+  it('matches the committed dashboard JSON', () => {
+    const committed = readFileSync('compose/grafana/dashboards/explore-tokens.json', 'utf8');
+    expect(committed).toBe(renderDashboard(exploreTokensDashboard));
+  });
+});
+
+describe('exploreActivityDashboard', () => {
+  it('validates against DashboardSchema', () => {
+    expect(() => DashboardSchema.parse(exploreActivityDashboard)).not.toThrow();
+  });
+
+  it('matches the committed dashboard JSON', () => {
+    const committed = readFileSync('compose/grafana/dashboards/explore-activity.json', 'utf8');
+    expect(committed).toBe(renderDashboard(exploreActivityDashboard));
+  });
+});
+
+/**
+ * The exploratory-panel types the next phase's workers need, beyond the
+ * six the four committed dashboards already use. Each panel is minimal:
+ * one target, no `custom` or `options`, so the test proves the schema
+ * accepts the `type` value itself rather than any particular field combo.
+ */
+const NEW_PANEL_TYPES: PanelType[] = [
+  'heatmap',
+  'gauge',
+  'piechart',
+  'xychart',
+  'state-timeline',
+  'trend',
+];
+
+describe('panel types the exploratory dashboards need', () => {
+  it.each(NEW_PANEL_TYPES)('validates a minimal %s panel against DashboardSchema', (type) => {
+    const minimalPanel = panel({
+      id: 1,
+      title: `Minimal ${type} panel`,
+      description: `A minimal ${type} panel used only to prove the schema accepts this type.`,
+      type,
+      gridPos: { x: 0, y: 0, w: 12, h: 8 },
+      targets: [lokiTarget({ refId: 'A', expr: '{service_name=~".+"}' })],
+    });
+
+    const minimalDashboard = dashboard({
+      uid: `test-${type}`,
+      title: `Test ${type}`,
+      variables: [],
+      panels: [minimalPanel],
+    });
+
+    expect(() => DashboardSchema.parse(minimalDashboard)).not.toThrow();
+    expect(minimalPanel.type).toBe(type);
   });
 });
