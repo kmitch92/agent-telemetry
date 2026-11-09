@@ -4,6 +4,13 @@ import { fileURLToPath } from 'node:url';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { Dashboard } from '../schema/dashboard.js';
 import { renderDashboard } from './lib.js';
+import { exploreActivityDashboard } from './explore-activity.js';
+import { exploreLatencyDashboard } from './explore-latency.js';
+import { exploreTokensDashboard } from './explore-tokens.js';
+import { liveActivityDashboard } from './live-activity.js';
+import { liveBurnDashboard } from './live-burn.js';
+import { liveNowDashboard } from './live-now.js';
+import { liveTroubleDashboard } from './live-trouble.js';
 import { mcpServersDashboard } from './mcp-servers.js';
 import { runsDashboard } from './runs.js';
 import { sessionsDashboard } from './sessions.js';
@@ -24,6 +31,13 @@ const OUTPUTS: readonly { path: string; dashboard: Dashboard }[] = [
   { path: 'compose/grafana/dashboards/tool-calls.json', dashboard: toolCallsDashboard },
   { path: 'compose/grafana/dashboards/mcp-servers.json', dashboard: mcpServersDashboard },
   { path: 'compose/grafana/dashboards/runs.json', dashboard: runsDashboard },
+  { path: 'compose/grafana/dashboards/explore-latency.json', dashboard: exploreLatencyDashboard },
+  { path: 'compose/grafana/dashboards/explore-tokens.json', dashboard: exploreTokensDashboard },
+  { path: 'compose/grafana/dashboards/explore-activity.json', dashboard: exploreActivityDashboard },
+  { path: 'compose/grafana/dashboards/live-burn.json', dashboard: liveBurnDashboard },
+  { path: 'compose/grafana/dashboards/live-activity.json', dashboard: liveActivityDashboard },
+  { path: 'compose/grafana/dashboards/live-trouble.json', dashboard: liveTroubleDashboard },
+  { path: 'compose/grafana/dashboards/live-now.json', dashboard: liveNowDashboard },
 ];
 
 const USAGE_LINE = 'usage: pnpm dashboards:build [--check]\n';
