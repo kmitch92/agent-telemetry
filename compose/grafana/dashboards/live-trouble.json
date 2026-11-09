@@ -1,0 +1,1214 @@
+{
+  "uid": "live-trouble",
+  "title": "Live, trouble",
+  "tags": [
+    "agent-telemetry"
+  ],
+  "timezone": "browser",
+  "editable": false,
+  "schemaVersion": 39,
+  "version": 0,
+  "refresh": "5s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s"
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "agent",
+        "label": "Agent",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "agent",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "project",
+        "label": "Project",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "project",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "session_id",
+        "label": "Session",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "session_id",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "variant",
+        "label": "Variant",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "variant",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "task",
+        "label": "Task",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "task",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "run_id",
+        "label": "Run",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "run_id",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "session_label",
+        "label": "Session label",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "session_label",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "branch",
+        "label": "Branch",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "branch",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Failed tool calls in window",
+      "description": "Counts kind=tool_call Events whose success attribute is false, over the selected time range (default the last 24 hours). The noValue field reads 0 instead of \"No data\" when Loki returns no matching line, so a clean window reads as a genuine zero.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"tool_call\" | success=\"false\" [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "type": "gauge",
+      "title": "Tool call success rate",
+      "description": "Divides the kind=tool_call Events whose success attribute is true by all kind=tool_call Events over the selected time range, as a percentage, red below 95 percent.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "100 * sum(count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"tool_call\" | success=\"true\" [$__range])) / sum(count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"tool_call\" [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "success rate"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 95
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Slowest model call in window",
+      "description": "Reads duration_ms on kind=model_call Events, the maximum value anywhere in the selected time range, coloured by thresholds at 10s and 30s. noValue reads 0 when no model call landed in the window.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "max(max_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | unwrap duration_ms [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 10000
+              },
+              {
+                "color": "red",
+                "value": 30000
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "MCP server errors in window",
+      "description": "Counts kind=mcp_server_call Events whose mcp_server_status attribute is error, over the selected time range, every error type combined. noValue reads 0 instead of \"No data\" when every mcp_server_call Event in range reports no error.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"mcp_server_call\" | mcp_server_status=\"error\" [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "type": "barchart",
+      "title": "Failed tool calls, by tool",
+      "description": "Counts kind=tool_call Events whose success attribute is false over the selected time range, one bar per tool, as a horizontal bar chart, so the tool that keeps breaking stands out.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (tool) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"tool_call\" | success=\"false\" [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{tool}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "axisPlacement": "auto"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0,
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "barchart",
+      "title": "MCP server errors, by error type",
+      "description": "Reads mcp_server_error_type on kind=mcp_server_call Events whose mcp_server_status attribute is error, counted over the selected time range, one bar per error type, as a horizontal bar chart.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (mcp_server_error_type) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"mcp_server_call\" | mcp_server_status=\"error\" [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{mcp_server_error_type}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "axisPlacement": "auto"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0,
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Model call duration, p95, over the window",
+      "description": "Reads duration_ms on kind=model_call Events, the 95th percentile duration in each interval, one series per model, over the selected time range, so an API that is slowing down shows as a rising line. The by (model) grouping is required, not cosmetic: without it quantile_over_time groups by every distinct stream instead of collapsing to one series per model, and over a 24-hour range with many historical streams that exceeded Loki's 500-series-per-query limit. Model calls are sparse relative to $__interval in a short live window, so null buckets are bridged and every point is drawn.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.95, {service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | unwrap duration_ms [$__interval]) by (model)",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "p95 {{model}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "always",
+            "pointSize": 5,
+            "barAlignment": 0,
+            "axisPlacement": "auto",
+            "spanNulls": true
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Failed tool calls, over time, by tool",
+      "description": "Counts kind=tool_call Events whose success attribute is false, stacked in fixed-interval buckets over the selected time range, one series per tool, so a burst of failures is visible against the quiet baseline.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (tool) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"tool_call\" | success=\"false\" [$__interval]))",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{tool}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "barAlignment": 0,
+            "axisPlacement": "auto",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "state-timeline",
+      "title": "Trouble windows",
+      "description": "One row, counting kind=tool_call failures plus kind=mcp_server_call errors in each interval over the selected time range. Each `or (... * 0)` term reports a true zero for an interval that saw any Event at all but no failure of that kind, so a colored segment means genuine trouble, a zero segment means a quiet-but-active interval, and a gap means no Event at all; no Event is fabricated to fill a gap.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "(sum(count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"tool_call\" | success=\"false\" [$__interval])) or (sum(count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} [$__interval])) * 0)) + (sum(count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"mcp_server_call\" | mcp_server_status=\"error\" [$__interval])) or (sum(count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} [$__interval])) * 0))",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "failures"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "mergeValues": true,
+        "showValue": "auto",
+        "alignValue": "left",
+        "rowHeight": 0.9,
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "table",
+      "title": "Last 50 failures",
+      "description": "Reads kind=tool_call Events whose success attribute is false, as raw log lines, a range query over the selected time range. A label_format stage sets session_label to the live session_label when present, otherwise the first 8 characters of session_id, before the Extract fields transformation splits the raw labels field into one field per Event attribute, convertFieldType makes duration_ms numeric so it sorts correctly, and the table is sorted by Time descending and limited to the latest 50 rows. Columns: the call Time, Session label, tool name and Duration (ms, millisecond-unit override); never the arguments or the output, and every other Event attribute is dropped.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "{service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"tool_call\" | success=\"false\" | label_format session_label=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}`",
+          "queryType": "range",
+          "instant": false,
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false,
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "include",
+                "names": [
+                  "duration_ms"
+                ]
+              }
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "source": "labels",
+            "format": "json"
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "duration_ms",
+                "destinationType": "number"
+              }
+            ]
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Time",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 50
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "labels": true,
+              "Line": true,
+              "tsNs": true,
+              "id": true,
+              "agent": true,
+              "branch": true,
+              "project": true,
+              "run_id": true,
+              "task": true,
+              "variant": true,
+              "session_id": true,
+              "kind": true,
+              "success": true,
+              "tool_type": true,
+              "mcp_server": true,
+              "result_bytes": true,
+              "detected_level": true,
+              "observed_timestamp": true,
+              "scope_name": true,
+              "scope_version": true,
+              "service_name": true,
+              "service_version": true,
+              "severity_number": true,
+              "severity_text": true,
+              "host_arch": true,
+              "os_type": true,
+              "os_version": true,
+              "config": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Time": 0,
+              "session_label": 1,
+              "tool": 2,
+              "duration_ms": 3
+            },
+            "renameByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "table",
+      "title": "Model calls over 60 seconds",
+      "description": "Reads kind=model_call Events whose duration_ms exceeds 60000, as raw log lines, a range query over the selected time range. A label_format stage sets session_label to the live session_label when present, otherwise the first 8 characters of session_id, before the Extract fields transformation splits the raw labels field into one field per Event attribute, convertFieldType makes duration_ms numeric, and the table is sorted by Time descending. Columns: the call Time, Session label, model and Duration (ms, millisecond-unit override); never the prompt or the response, and every other Event attribute is dropped.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "{service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | duration_ms > 60000 | label_format session_label=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}`",
+          "queryType": "range",
+          "instant": false,
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false,
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "include",
+                "names": [
+                  "duration_ms"
+                ]
+              }
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "source": "labels",
+            "format": "json"
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "duration_ms",
+                "destinationType": "number"
+              }
+            ]
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Time",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "labels": true,
+              "Line": true,
+              "tsNs": true,
+              "id": true,
+              "agent": true,
+              "branch": true,
+              "project": true,
+              "run_id": true,
+              "task": true,
+              "variant": true,
+              "session_id": true,
+              "kind": true,
+              "input_tokens": true,
+              "output_tokens": true,
+              "cache_read_tokens": true,
+              "cache_write_tokens": true,
+              "reasoning_tokens": true,
+              "cost_usd": true,
+              "detected_level": true,
+              "observed_timestamp": true,
+              "scope_name": true,
+              "scope_version": true,
+              "service_name": true,
+              "service_version": true,
+              "severity_number": true,
+              "severity_text": true,
+              "host_arch": true,
+              "os_type": true,
+              "os_version": true,
+              "config": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Time": 0,
+              "session_label": 1,
+              "model": 2,
+              "duration_ms": 3
+            },
+            "renameByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "Quietest active Session, time silent",
+      "description": "Reads observed_timestamp on every Event over the selected time range, the latest value per session_id, so only a Session that emitted at least one Event in the window counts as active. The built-in Grafana variable $__to (the end of the selected time range, in Unix milliseconds) minus each Session's latest observed_timestamp (converted from nanoseconds to milliseconds) gives that Session's silence so far; the outer max picks the longest, catching a Session that has stalled. noValue reads 0 when no Session is active in the window at all.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 48
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "max($__to - (max by (session_id) (max_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | unwrap observed_timestamp [$__range])) / 1000000))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 120000
+              },
+              {
+                "color": "red",
+                "value": 300000
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    }
+  ]
+}

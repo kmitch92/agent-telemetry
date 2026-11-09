@@ -1,0 +1,1174 @@
+{
+  "uid": "live-burn",
+  "title": "Live, burn rate",
+  "tags": [
+    "agent-telemetry"
+  ],
+  "timezone": "browser",
+  "editable": false,
+  "schemaVersion": 39,
+  "version": 0,
+  "refresh": "5s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s"
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "agent",
+        "label": "Agent",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "agent",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "project",
+        "label": "Project",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "project",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "session_id",
+        "label": "Session",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "session_id",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "variant",
+        "label": "Variant",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "variant",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "task",
+        "label": "Task",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "task",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "run_id",
+        "label": "Run",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "run_id",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "session_label",
+        "label": "Session label",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "session_label",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "branch",
+        "label": "Branch",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "branch",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Tokens per minute, right now",
+      "description": "The sum of input_tokens, output_tokens, cache_read_tokens and cache_write_tokens on kind=model_call Events in the trailing 5 minutes, divided by 5, across every active Session that matches the pickers. A fixed 5-minute window, not the dashboard time range, so this reads the current rate even when the picker is set to look further back. The `or (... * 0)` term reports a true zero when no call landed in the last 5 minutes, and no Event is fabricated. The noValue field backs that up with a literal 0 when Loki returns no matching stream at all. If the stored Events include a replayed capture, several log lines share one near-identical timestamp, so a rate figure over that stretch reads far higher than any live Session could produce; the same panel reads correctly once a live Session is running.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "(sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | label_format session_label=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` | input_tokens != \"\" | output_tokens != \"\" | cache_read_tokens != \"\" | cache_write_tokens != \"\" | label_format total_tokens=\"{{ add .input_tokens .output_tokens .cache_read_tokens .cache_write_tokens }}\" | unwrap total_tokens [5m])) or (sum(count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" [5m])) * 0)) / 5",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "Active Sessions, right now",
+      "description": "Counts the distinct session_id values emitting any Event in the trailing 5 minutes, the same fixed window the two rate stats on this row use, so all three numbers describe the same \"right now\".",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "count(count by (session_id) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} [5m])))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Money, extrapolated per hour",
+      "description": "The sum of cost_usd on kind=model_call Events in the trailing 15 minutes, multiplied by four to extrapolate a dollars-per-hour figure, across every active Session that matches the pickers. Only about 96 of 28596 model_call Events in the captured data carry cost_usd at all, so this stat is frequently empty or reads a true zero; that is honest, not a bug, and no price table is invented to fill the gap. The `or (... * 0)` term reports a true zero when no call in the window carries cost_usd, and the noValue field reads `no spend yet` instead of \"No data\" when Loki returns no matching stream at all. If the stored Events include a replayed capture, several model_call Events share one near-identical timestamp, so an extrapolated dollars-per-hour figure over that stretch can read far higher than any live Session could spend; the same panel reads correctly once a live Session is running.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "(sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | unwrap cost_usd [15m])) or (sum(count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" [15m])) * 0)) * 4",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "noValue": "no spend yet"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Tokens per minute, by Session",
+      "description": "The sum of input_tokens, output_tokens, cache_read_tokens and cache_write_tokens on kind=model_call Events in each $__interval window, one series per session_label, divided by the window length in minutes so the figure is a genuine per-minute rate. A Session with no session_label is shown under the first 8 characters of its session_id instead, so one runaway Session still stands out by name. If the stored Events include a replayed capture, many log lines share one near-identical timestamp and land in the same $__interval bucket, so this panel can read in the tens of millions over a historical window; the figure is correct once read against a live Session.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (session_label) (sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | label_format session_label=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` | input_tokens != \"\" | output_tokens != \"\" | cache_read_tokens != \"\" | cache_write_tokens != \"\" | label_format total_tokens=\"{{ add .input_tokens .output_tokens .cache_read_tokens .cache_write_tokens }}\" | unwrap total_tokens [$__interval])) / ($__interval_ms / 60000)",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{session_label}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "auto",
+            "pointSize": 5,
+            "barAlignment": 0,
+            "axisPlacement": "auto",
+            "spanNulls": false
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Input, output, cache-read and cache-write tokens, stacked",
+      "description": "The sum of input_tokens, output_tokens, cache_read_tokens and cache_write_tokens on kind=model_call Events in each $__interval window, four stacked series, across every active Session that matches the pickers, so which kind of token dominates the current burn is visible at a glance.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | input_tokens != \"\" | unwrap input_tokens [$__interval]))",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "input"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | output_tokens != \"\" | unwrap output_tokens [$__interval]))",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "output"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | cache_read_tokens != \"\" | unwrap cache_read_tokens [$__interval]))",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "cache read"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | cache_write_tokens != \"\" | unwrap cache_write_tokens [$__interval]))",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "cache write"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 40,
+            "showPoints": "never",
+            "pointSize": 5,
+            "barAlignment": 0,
+            "axisPlacement": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "gauge",
+      "title": "Cache-read share of input-side tokens",
+      "description": "cache_read_tokens divided by the sum of cache_read_tokens, input_tokens and cache_write_tokens, summed over kind=model_call Events in the selected range, as a true 0-100% share, so the operator can tell whether the cache is working right now rather than paying full price for repeated context.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 14
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | cache_read_tokens != \"\" | unwrap cache_read_tokens [$__range])) / (sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | cache_read_tokens != \"\" | unwrap cache_read_tokens [$__range])) + sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | input_tokens != \"\" | unwrap input_tokens [$__range])) + sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | cache_write_tokens != \"\" | unwrap cache_write_tokens [$__range])))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percentunit",
+          "decimals": 4,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      }
+    },
+    {
+      "id": 7,
+      "type": "barchart",
+      "title": "Tokens by model",
+      "description": "The sum of input_tokens, output_tokens, cache_read_tokens and cache_write_tokens on kind=model_call Events in the selected range, grouped by model, as a horizontal bar chart, so an expensive model stands out from a cheap one.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 14
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (model) (sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | label_format session_label=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` | input_tokens != \"\" | output_tokens != \"\" | cache_read_tokens != \"\" | cache_write_tokens != \"\" | label_format total_tokens=\"{{ add .input_tokens .output_tokens .cache_read_tokens .cache_write_tokens }}\" | unwrap total_tokens [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{model}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "axisPlacement": "auto"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0,
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Per-Session burn, in the selected range",
+      "description": "One row per session_label (falling back to the first 8 characters of session_id when the label is empty): tokens so far, the sum of input_tokens, output_tokens, cache_read_tokens and cache_write_tokens on kind=model_call Events; and cost so far, the sum of cost_usd. Claude Code's own Events do not emit a cost_usd field at all, so cost so far is blank for a Claude Code Session; it fills only once a Run records an Event that carries cost_usd. Both targets are instant queries taken at the same moment, so the join also carries one Time column repeating that single identical instant on every row; it is dropped here as noise, not data.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (session_label) (sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | label_format session_label=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` | input_tokens != \"\" | output_tokens != \"\" | cache_read_tokens != \"\" | cache_write_tokens != \"\" | label_format total_tokens=\"{{ add .input_tokens .output_tokens .cache_read_tokens .cache_write_tokens }}\" | unwrap total_tokens [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (session_label) (sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | label_format session_label=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` | unwrap cost_usd [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false,
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cost so far"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "session_label",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "session_label": 0,
+              "Value #A": 1,
+              "Value #B": 2
+            },
+            "renameByName": {
+              "Value #A": "tokens so far",
+              "Value #B": "cost so far"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Cumulative money spent, since the window began",
+      "description": "The running total of cost_usd summed over kind=model_call Events, across every active Session that matches the pickers, using a cumulative-sum field calculation over the per-interval sum, in the selected range. Claude Code's own Events do not emit a cost_usd field at all, so this line stays at the noValue reading `no cost recorded` for a Claude Code Session; it fills only once a Run records an Event that carries cost_usd.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 30
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | unwrap cost_usd [$__interval]))",
+          "queryType": "range",
+          "instant": false,
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "auto",
+            "pointSize": 5,
+            "barAlignment": 0,
+            "axisPlacement": "auto",
+            "spanNulls": false
+          },
+          "unit": "currencyUSD",
+          "noValue": "no cost recorded"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "cumulativeFunctions",
+            "cumulative": {
+              "field": "Value",
+              "reducer": "sum"
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Value": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Time": 0,
+              "cumulative sum(Value)": 1
+            },
+            "renameByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Reasoning tokens per minute, by model",
+      "description": "The sum of reasoning_tokens on kind=model_call Events over each $__interval window, one series per model, divided by the window length in minutes, so a reasoning-heavy model that quietly drives up the burn rate stands out. A model that never reports reasoning_tokens is absent from this panel rather than shown at zero. The same replayed-capture clustering that inflates the token-per-minute panels on this board applies here too: a historical window can read unrealistically high, and the figure is correct once read against a live Session.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 30
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (model) (sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | reasoning_tokens != \"\" | unwrap reasoning_tokens [$__interval])) / ($__interval_ms / 60000)",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{model}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "auto",
+            "pointSize": 5,
+            "barAlignment": 0,
+            "axisPlacement": "auto",
+            "spanNulls": false
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "Most expensive model call in the window",
+      "description": "Reads kind=model_call Events that carry cost_usd as raw log lines, a range query over the selected range, sorted by cost_usd descending and limited to the single most expensive call, with its model, duration_ms and Session shown alongside, falling back to the first 8 characters of session_id when session_label is empty. Shown as a one-row table rather than a stat, because a stat panel has no way to tie one field's maximum to another field on the same Event. Only about 96 of 28596 model_call Events carry cost_usd, so this table is frequently empty; that is honest, not a bug. The noValue field reads `no spend yet` instead of \"No data\" when no Event in the selected range carries cost_usd.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 38
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "{service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | label_format session_label=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` | cost_usd != \"\"",
+          "queryType": "range",
+          "instant": false,
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false,
+            "filterable": true
+          },
+          "noValue": "no spend yet"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cost_usd"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "duration_ms"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "source": "labels",
+            "format": "json"
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "cost_usd",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "duration_ms",
+                "destinationType": "number"
+              }
+            ]
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "cost_usd",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 1
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "labels": true,
+              "Line": true,
+              "tsNs": true,
+              "id": true,
+              "agent": true,
+              "branch": true,
+              "cache_read_tokens": true,
+              "cache_write_tokens": true,
+              "detected_level": true,
+              "input_tokens": true,
+              "kind": true,
+              "observed_timestamp": true,
+              "output_tokens": true,
+              "project": true,
+              "reasoning_tokens": true,
+              "run_id": true,
+              "scope_name": true,
+              "scope_version": true,
+              "service_name": true,
+              "session_id": true,
+              "severity_number": true,
+              "severity_text": true,
+              "task": true,
+              "variant": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Time": 0,
+              "model": 1,
+              "cost_usd": 2,
+              "duration_ms": 3,
+              "session_label": 4
+            },
+            "renameByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "barchart",
+      "title": "Cost by model, in the selected range",
+      "description": "The sum of cost_usd on kind=model_call Events in the selected range, grouped by model, as a horizontal bar chart, so an expensive model stands out by price rather than only by token count. Claude Code's own Events do not emit a cost_usd field at all, so this chart stays at the noValue reading `no cost recorded` for a Claude Code Session; it fills only once a Run records an Event that carries cost_usd.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 38
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (model) (sum_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | unwrap cost_usd [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{model}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "axisPlacement": "auto"
+          },
+          "unit": "currencyUSD",
+          "noValue": "no cost recorded"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0,
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    }
+  ]
+}

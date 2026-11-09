@@ -1,0 +1,1217 @@
+{
+  "uid": "live-now",
+  "title": "Live, now",
+  "tags": [
+    "agent-telemetry"
+  ],
+  "timezone": "browser",
+  "editable": false,
+  "schemaVersion": 39,
+  "version": 0,
+  "refresh": "5s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s"
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "agent",
+        "label": "Agent",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "agent",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "project",
+        "label": "Project",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "project",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "session_id",
+        "label": "Session",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "session_id",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "variant",
+        "label": "Variant",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "variant",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "task",
+        "label": "Task",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "task",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "run_id",
+        "label": "Run",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "run_id",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "session_label",
+        "label": "Session label",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "session_label",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      },
+      {
+        "name": "branch",
+        "label": "Branch",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "branch",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "table",
+      "title": "Live sessions",
+      "description": "One row per Session with an Event in the selected window: its label (session_label, or the first 8 characters of session_id when session_label is absent), seconds since its last Event, model calls so far, tool calls so far, and the model it called most recently (sum by session_id and model, so a Session that calls more than one model shows one row per model it used). Seconds since last event is the query's own evaluation instant minus the last observed_timestamp, computed in two calculateField steps because LogQL has no time() function.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "max_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | label_format session_display=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` | unwrap observed_timestamp [$__range]) by (session_id, session_display) / 1000000",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (session_id) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (session_id) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"tool_call\" [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (session_id, model) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false,
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "seconds since last event"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "session_id",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "binary",
+            "binary": {
+              "left": "Time 1",
+              "operator": "-",
+              "right": "Value #A"
+            },
+            "alias": "ms_since"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "binary",
+            "binary": {
+              "left": "ms_since",
+              "operator": "/",
+              "right": "1000"
+            },
+            "alias": "seconds_since",
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "session_id": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true,
+              "Value #A": true,
+              "Value #D": true,
+              "ms_since": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "session_display": 0,
+              "seconds_since": 1,
+              "Value #B": 2,
+              "Value #C": 3,
+              "model": 4
+            },
+            "renameByName": {
+              "Value #B": "model calls",
+              "Value #C": "tool calls",
+              "seconds_since": "seconds since last event"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "seconds since last event",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Active sessions, right now",
+      "description": "Counts the distinct session_id values with at least one Event in the selected window. Zero is a genuine count, shown rather than \"No data\", because count() over zero matching Sessions is itself the real answer. The inner aggregation is `sum by`, not `count by`: a direct query against this Stack's Loki confirmed `count by (session_id) (count_over_time(...))` raises \"maximum of series (500) reached for a single query\" over a wide window on this exact dataset, where the structurally identical `sum by (session_id)` does not, so the sum form is used and the outer count() still counts one entry per distinct session_id.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "count(sum by (session_id) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} [$__range])))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "state-timeline",
+      "title": "Session activity, working against idle",
+      "description": "One row per Session, the top 20 by Event count in the selected window: 1 (\"working\") in every $__interval bucket that holds at least one Event, nothing drawn for a bucket with no Event, since LogQL has no way to report a true 0 at a specific time bucket without fabricating an Event. A gap in a row is a bucket with no Event, closer to \"idle\" than to \"working\", but it is drawn as a gap, not coloured idle, so no value is invented.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "topk(20, (sum by (session_display) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | label_format session_display=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` [$__interval]))) > bool 0)",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{session_display}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "working"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "mergeValues": true,
+        "showValue": "auto",
+        "alignValue": "left",
+        "rowHeight": 0.9,
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "barchart",
+      "title": "Seconds since last event, by session",
+      "description": "For each Session with an Event in the selected window, $__to (the built-in Grafana end-of-range variable, in Unix milliseconds) minus its last observed_timestamp (converted from nanoseconds), in seconds, so a stalled Session stands out with a tall bar. The subtraction is computed inside the LogQL expression itself, the same $__to arithmetic already proven correct on the Live: trouble board, rather than through a calculateField transformation: a per-session grouped query returns one frame per Session with its label carried as metadata rather than a plain column, and calculateField run without first joining those frames back together produced a wildly wrong figure (confirmed against this Stack's Loki: thousands of years instead of hours), so the arithmetic now happens where the label and the value are still one query result. Drawn as a horizontal `barchart`, not a `bargauge`: a `bargauge` fed by a query that narrows to one series hides its label, a fault already hit and fixed the same way on the Explore: activity and Explore: latency boards.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "($__to - (max_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | label_format session_display=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` | unwrap observed_timestamp [$__range]) by (session_display) / 1000000)) / 1000",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{session_display}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "axisPlacement": "auto"
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0,
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Session state, in words, top 10",
+      "description": "One tile per Session with an Event in the selected window, limited to the top 10 by that same working/idle value (so a working Session always sorts ahead of an idle one): 1 when that Session has an Event in the trailing 1 minute, 0 otherwise, mapped through valueMapping to \"working\" or \"idle\". A Session count in the low twenties drew one tile per Session, each too small to read its own label; topk(10, ...) keeps the panel at its original size (so it still lines up with its row's two sibling stat panels) while cutting the tile count enough to read each label. The `or (... * 0)` term reports a true 0 for a Session that is in the window but quiet right now, rather than dropping it, and no Event is fabricated.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "topk(10, (sum by (session_display) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | label_format session_display=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` [1m])) > bool 0) or (sum by (session_display) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | label_format session_display=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` [$__range])) * 0))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{session_display}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "idle"
+                },
+                "1": {
+                  "text": "working"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Events per second, by session",
+      "description": "Every kind of Event, counted in each $__interval bucket and divided by the bucket length in seconds, one series per Session, so the rhythm of a Session (steady, bursty, or silent) is visible over the selected window.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 26
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (session_display) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | label_format session_display=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` [$__interval])) / ($__interval_ms / 1000)",
+          "queryType": "range",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{session_display}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "auto",
+            "pointSize": 5,
+            "barAlignment": 0,
+            "axisPlacement": "auto",
+            "spanNulls": false
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Sessions seen today, not active now",
+      "description": "Sessions with at least one Event in the last 24 hours, minus (LogQL's `unless` set operator) every Session with an Event in the selected window, so only a Session that has genuinely gone quiet remains, with how long ago (in seconds) its last Event was: $__to (the built-in Grafana end-of-range variable, in Unix milliseconds) minus that Event's observed_timestamp, computed inside the LogQL expression itself. The arithmetic moved into LogQL, and labelsToFields plus merge now turn each Session's session_display label into an actual table column before the rows are combined: this panel read \"No data\" at a 1-hour range because the query returns one frame per Session with session_display carried as frame metadata rather than a column, and a table fed many single-row, single-column frames with nothing in common to join on renders nothing, confirmed by a direct query against this exact expression, which returned real data at the Loki level throughout. This panel's own \"today\" window is a fixed 24 hours, independent of the dashboard's own default range, since a Session stopped 2 hours ago would otherwise never appear.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 50
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "(($__to - (max_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | label_format session_display=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` | unwrap observed_timestamp [24h]) by (session_display) / 1000000)) / 1000) unless (sum by (session_display) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | label_format session_display=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` [$__range])) * 0)",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{session_display}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false,
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "stopped, seconds ago"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        }
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {}
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "session_display": 0,
+              "Value": 1
+            },
+            "renameByName": {
+              "Value": "stopped, seconds ago"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "stopped, seconds ago",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "piechart",
+      "title": "Active sessions, by project",
+      "description": "Counts the distinct session_id values with at least one Event in the selected window, grouped by project. reduceOptions.values is true because an instant Loki query returns one table-shaped frame with project as a string column and Value as the numeric column, one row per series, so the panel needs one slice per row, the same reason toolTypeSplitPanel on the Explore: activity board sets it.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 34
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "count by (project) (sum by (session_id, project) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} [$__range])))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{project}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "pieType": "pie",
+        "displayLabels": [
+          "name",
+          "value"
+        ],
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "right",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "barchart",
+      "title": "Active sessions, by branch",
+      "description": "Counts the distinct session_id values with at least one Event in the selected window, grouped by branch, as a horizontal bar chart rather than a pie, for a second visualisation of the same split the project panel above draws. A label_format step renames an empty branch to the literal \"none\" before grouping, the same fix allKindsOverTimePanel on the Explore: activity board applies to an empty kind, because an empty branch interpolates to an empty legend name and draws as a blank bar label.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 34
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "count by (branch) (sum by (session_id, branch) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | label_format branch=`{{ if .branch }}{{ .branch }}{{ else }}none{{ end }}` [$__range])))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{branch}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "axisPlacement": "auto"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0,
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Longest-running session in view, time since first event",
+      "description": "Was \"Longest continuously active session\": the largest gap between a Session's first and last observed_timestamp in the selected window. A direct query against this exact expression confirmed it measured 0.074 s (74 ms) for this Stack's busiest Session, because every stored Session's observed_timestamp values land within milliseconds of each other, not spread across the Session's real duration, so \"first minus last\" can never read in hours for the data this Stack holds. This panel now reports, among Sessions with at least one Event in the selected window, the longest elapsed time since that Session's earliest Event ($__to, the built-in Grafana end-of-range variable, in Unix milliseconds, minus the earliest observed_timestamp, converted from nanoseconds), the same $__to-minus-observed_timestamp arithmetic already proven correct on the Live: trouble board. noValue reads 0 when no Session has an Event in the window at all.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "topk(1, $__to - (min by (session_display) (min_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | label_format session_display=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` | unwrap observed_timestamp [$__range])) / 1000000)) / 1000",
+          "queryType": "instant",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "s",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 11,
+      "type": "barchart",
+      "title": "Model calls against tool calls, by session",
+      "description": "For each Session with an Event in the selected window, the count of kind=model_call Events against the count of kind=tool_call Events, two bars per Session, so a Session doing mostly tool work stands out against one doing mostly model calls.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 42
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (session_display) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"model_call\" | label_format session_display=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{session_display}}"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (session_display) (count_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | kind=\"tool_call\" | label_format session_display=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` [$__range]))",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{session_display}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        }
+      },
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "session_display",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time 1": true,
+              "Time 2": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "session_display": 0,
+              "Value #A": 1,
+              "Value #B": 2
+            },
+            "renameByName": {
+              "Value #A": "model calls",
+              "Value #B": "tool calls"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "trend",
+      "title": "Sessions ranked by seconds since last event",
+      "description": "Was \"Model calls so far against seconds since last event\": model calls on the x axis drew a flat line repeating one value, because most stored Sessions share the same model-call count (often 0 in a narrow window), so the groupBy step collapsed nearly every Session into one x bucket. A direct query against the surviving y-axis expression confirmed the repeated figure itself was correct (the genuine seconds-since-last-event most stale Sessions share), so the fix is the x field, not the arithmetic. $__to (the built-in Grafana end-of-range variable) minus each Session's last observed_timestamp gives seconds since last event directly in LogQL; labelsToFields turns the session_display label into a column, sortBy orders Sessions from most to least idle, and calculateField's index mode then adds each row's position as a `rank` field: a plain row count, so it is always unique and ascending regardless of how many Sessions share the same seconds-since value, the one property a `trend` panel needs from its x field. A `trend` panel, not `xychart`: the xychart plugin does not load in this Grafana image.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 58
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "($__to - (max_over_time({service_name=~\".+\", agent=~\"$agent\", project=~\"$project\", session_id=~\"$session_id\", run_id=~\"$run_id\", task=~\"$task\", variant=~\"$variant\", session_label=~\"$session_label\", branch=~\"$branch\"} | label_format session_display=`{{ if .session_label }}{{ .session_label }}{{ else }}{{ substr 0 8 .session_id }}{{ end }}` | unwrap observed_timestamp [$__range]) by (session_display) / 1000000)) / 1000",
+          "queryType": "instant",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{session_display}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "points",
+            "lineWidth": 0,
+            "fillOpacity": 0,
+            "showPoints": "always",
+            "pointSize": 5,
+            "barAlignment": 0,
+            "axisPlacement": "auto",
+            "spanNulls": false
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "xFieldName": "rank",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {}
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Value",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "index",
+            "alias": "rank",
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "session_display": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "rank": 0,
+              "Value": 1
+            },
+            "renameByName": {
+              "Value": "seconds_since"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
