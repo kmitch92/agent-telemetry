@@ -18,6 +18,15 @@
 # below, but they did not appear because the test Event carried none. They
 # become labels on the first Runner Event that sets them.
 #
+# The attributes_config below names NINE index labels, not four and not
+# seven: the five above, plus `run_id`, `task`, `variant`, and two more,
+# `session_label` and `branch`. `session_label` carries the readable
+# `<project> · <branch> · HH:MM` label the operator picks for a
+# hand-started Session (`scripts/session-env.ts`), and `branch` carries the
+# git branch alone, so a dashboard can group or filter by either without
+# decoding the opaque `session_id`. Both become labels on the first Event
+# whose resource carries them.
+#
 # Everything else stays structured metadata, not an index label. The same
 # ingest showed these, read from a query_range response:
 #     detected_level  event_name  kind  observed_timestamp  prompt_length
@@ -63,6 +72,12 @@ limits_config:
   otlp_config:
     resource_attributes:
       attributes_config:
+        # Nine index labels, not seven: `session_label` and `branch` are
+        # added so the operator can group a hand-started Session in Grafana
+        # by the readable `<project> · <branch> · HH:MM` label and by
+        # `branch` on its own, instead of only by the opaque `session_id`.
+        # An attribute not named here arrives as structured metadata and
+        # cannot be grouped by in a dashboard query.
         - action: index_label
           attributes:
             - service.name
@@ -72,6 +87,8 @@ limits_config:
             - run_id
             - task
             - variant
+            - session_label
+            - branch
 
 compactor:
   working_directory: /loki/compactor
