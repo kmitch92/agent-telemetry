@@ -33,6 +33,20 @@ processors:
           - 'replace_pattern(resource.attributes["project"], "^.*/", "") where resource.attributes["project"] != nil'
           - 'set(resource.attributes["project"], Concat([resource.attributes["project"], Substring(SHA256(resource.attributes["project_path"]), 0, 8)], "-")) where resource.attributes["project_path"] != nil'
           - 'delete_key(resource.attributes, "project_path")'
+          # Fallback: a session the operator starts by hand in a terminal
+          # (scripts/session-env.ts, run without `eval`, or run before that
+          # script existed) can carry no `project_path` at all. Without
+          # this statement `project` would stay nil for such a session, and
+          # `ResourceAttributesSchema` (src/schema/resource.ts) requires a
+          # non-empty `project`, so the Event would be silently dropped
+          # rather than stored. This statement runs last in the group and
+          # only where `project` is still nil, so it never overwrites the
+          # value the derivation above already set, and never overwrites a
+          # `project` value the Agent's own OTEL_RESOURCE_ATTRIBUTES already
+          # supplied directly. `session_label` and `branch`, when present,
+          # are resource attributes that no statement in this group reads,
+          # writes, or deletes, so they survive this transform untouched.
+          - 'set(resource.attributes["project"], "unknown") where resource.attributes["project"] == nil'
 
           # Group B - the Kind, matched on the Agent's own event.name. This
           # is the only place in the repository allowed to know a Claude
